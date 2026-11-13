@@ -138,3 +138,9 @@ textarea.in{min-height:96px;resize:vertical}
 #toast.on{opacity:1}#toast.bad{background:var(--bad);color:#fff}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 @media (max-width:380px){.li{grid-template-columns:1fr 74px 72px 36px}.big{font-size:1.8rem}}
+.irow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.irow .ichk{display:flex;gap:10px;align-items:center;min-width:0}
+.irow .ichk input{width:20px;height:20px;flex:none}
+.irow .ichk .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.irow select.in{grid-column:1/-1;margin-top:6px}
+.irow.dup{opacity:.55}

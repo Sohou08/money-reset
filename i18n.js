@@ -1,6 +1,6 @@
 window.I18N={
 fr:{
-home:'Accueil',goals:'Objectifs',tx:'Transactions',cal:'Calendrier',stats:'Statistiques',send:'Envois famille',more:'Plus',recurring:'Dépenses récurrentes',trips:'Voyages',review:'Bilan Kakeibo',settings:'Réglages',
+home:'Accueil',goals:'Objectifs',tx:'Transactions',cal:'Calendrier',stats:'Statistiques',send:'Envois famille',more:'Plus',recurring:'Dépenses récurrentes',trips:'Voyages',review:'Bilan du mois',settings:'Réglages',
 nav_home:'Accueil',nav_goals:'Objectifs',nav_tx:'Transactions',nav_cal:'Calendrier',nav_stats:'Stats',nav_send:'Envois',
 d_recurring:'Salaire, loyer, abonnements',d_trips:'Budget par voyage en FCFA ou autre',d_review:'Les 4 questions du mois',d_settings:'Langue, taux du dollar, sauvegarde',
 back:'Retour',display:'Devise d’affichage',close:'Fermer',save:'Enregistrer',del:'Supprimer',edit:'Modifier',saved:'Enregistré',copy:'Copier',copied:'Copié',copyFail:'Copie impossible : sélectionnez le texte à la main.',
@@ -38,7 +38,7 @@ q1:'1. Combien est-il entré ?',q1a:'Reste après fixes',q2:'2. Combien avez-vou
 lang:'Langue',exportCsv:'Exporter en CSV',backup:'Sauvegarde',backupHint:'Copiez ce texte et gardez-le : il contient toutes vos données.',restore:'Restaurer',restorePh:'Collez ici une sauvegarde',restoreOk:'Données restaurées',restoreBad:'Sauvegarde invalide.',reset:'Tout effacer',resetConfirm:'Confirmer : tout effacer',authSub:'Votre budget, vos envois, vos objectifs. Connectez-vous pour retrouver vos données sur tous vos appareils.',signin:'Se connecter',signup:'Créer un compte',email:'E-mail',password:'Mot de passe',guest:'Continuer sans compte',guestNote:'Sans compte, vos données restent sur cet appareil uniquement.',authBad:'E-mail ou mot de passe incorrect.',authFill:'Entrez votre e-mail et votre mot de passe.',authCheck:'Compte créé. Vérifiez votre boîte mail pour confirmer, puis connectez-vous.',authWeak:'Mot de passe trop faible (8 caractères minimum).',authExists:'Un compte existe déjà avec cet e-mail.',authMail:'Adresse e-mail invalide.',authNet:'Connexion impossible. Réessayez.',acct:'Mon compte',logout:'Se déconnecter',sync_ok:'Données synchronisées',sync_saving:'Synchronisation…',sync_err:'Synchronisation impossible (données gardées sur cet appareil)'
 },
 en:{
-home:'Home',goals:'Goals',tx:'Transactions',cal:'Calendar',stats:'Statistics',send:'Family sends',more:'More',recurring:'Recurring expenses',trips:'Trips',review:'Kakeibo review',settings:'Settings',
+home:'Home',goals:'Goals',tx:'Transactions',cal:'Calendar',stats:'Statistics',send:'Family sends',more:'More',recurring:'Recurring expenses',trips:'Trips',review:'Monthly review',settings:'Settings',
 nav_home:'Home',nav_goals:'Goals',nav_tx:'Transactions',nav_cal:'Calendar',nav_stats:'Stats',nav_send:'Sends',
 d_recurring:'Salary, rent, subscriptions',d_trips:'Budget per trip in FCFA or other',d_review:'The 4 monthly questions',d_settings:'Language, dollar rate, backup',
 back:'Back',display:'Display currency',close:'Close',save:'Save',del:'Delete',edit:'Edit',saved:'Saved',copy:'Copy',copied:'Copied',copyFail:'Copy failed: select the text by hand.',
@@ -76,3 +76,47 @@ q1:'1. How much came in?',q1a:'Left after fixed costs',q2:'2. How much did you s
 lang:'Language',exportCsv:'Export as CSV',backup:'Backup',backupHint:'Copy this text and keep it: it holds all your data.',restore:'Restore',restorePh:'Paste a backup here',restoreOk:'Data restored',restoreBad:'Invalid backup.',reset:'Erase everything',resetConfirm:'Confirm: erase everything',authSub:'Your budget, your sends, your goals. Sign in to find your data on all your devices.',signin:'Sign in',signup:'Create an account',email:'Email',password:'Password',guest:'Continue without an account',guestNote:'Without an account, your data stays on this device only.',authBad:'Wrong email or password.',authFill:'Enter your email and password.',authCheck:'Account created. Check your inbox to confirm, then sign in.',authWeak:'Password too weak (8 characters minimum).',authExists:'An account already exists with this email.',authMail:'Invalid email address.',authNet:'Could not connect. Try again.',acct:'My account',logout:'Sign out',sync_ok:'Data synced',sync_saving:'Syncing…',sync_err:'Sync failed (data kept on this device)'
 }
 };
+Object.assign(window.I18N.fr,{
+authSub:'Votre budget, vos envois à la famille, vos objectifs : pensé pour les Africains qui vivent à l’étranger. Connectez-vous pour retrouver vos données sur tous vos appareils.',
+d_trips:'Un budget par voyage',d_settings:'Langue, taux de change, sauvegarde',
+rateFixed:'Le dollar est converti avec le taux de référence de la Banque centrale européenne, mis à jour automatiquement chaque mois.',
+rateAuto:'automatique',rateNow:'Actualiser maintenant',rateOk:'Taux mis à jour',rateFail:'Impossible de récupérer le taux. Le dernier taux connu est conservé.',rateBackup:'Taux de secours : pas encore mis à jour',
+c_save:'Épargne',c_invest:'Investissement',h_save:'Argent mis de côté : livret, fonds d’urgence.',h_invest:'Placements : assurance-vie, bourse, projets qui rapportent.',
+addMenuT:'Ajouter',menuImport:'Importer un relevé ou une facture',menuImportH:'Fichier CSV ou PDF : l’app classe tout pour vous',menuManual:'Saisie manuelle',menuManualH:'Pour ajouter une dépense à la main',
+impBtn:'Importer un relevé ou une facture',impHomeT:'Remplissez votre mois en un geste',impHomeP:'Déposez un relevé bancaire ou une facture : l’app lit les lignes et propose la catégorie de chacune.',
+impTitle:'Importer',impPick:'Choisissez un relevé bancaire (CSV) ou une facture / un relevé en PDF.',
+impFormats:'Formats lus : CSV, PDF contenant du texte (relevé ou facture téléchargés). Les photos et PDF scannés arrivent bientôt.',
+impPrivacy:'Le fichier est lu sur votre appareil : il n’est pas envoyé sur nos serveurs. Seules les opérations que vous validez sont enregistrées.',
+impReading:'Lecture du fichier…',impNone:'Aucune opération reconnue dans ce fichier. Vérifiez le format ou saisissez à la main.',
+impScan:'Ce fichier est une photo ou un scan : sa lecture automatique arrive bientôt. En attendant, saisissez la dépense à la main.',
+impPdfFail:'Lecture du PDF impossible (connexion ou fichier protégé). Essayez le CSV de votre banque.',
+impReview:'Vérifiez les catégories proposées et décochez ce que vous ne voulez pas importer.',impUnsure:'Montants lus dans un PDF : vérifiez-les avant d’importer.',
+impFound:'opérations trouvées',impDup:'déjà présente',impCheck:'à vérifier',impGo:'Importer la sélection',impAgain:'Autre fichier',impZero:'Aucune ligne sélectionnée.',impDone:'opérations ajoutées',impNoLabel:'Sans libellé',impInvoice:'Facture',
+fcfaTitle:'Ce que reçoit votre famille (estimation)',fcfaRange:'Fourchette min – max',fcfaConv:'Convertisseur rapide en FCFA',
+fcfaNote:'Taux fixe : 1 € = 655,957 FCFA. Les frais et le taux du prestataire (Wave, Sendwave, LemFi…) peuvent changer le montant réellement reçu.',
+splitTitle:'Où va votre argent',splitNeeds:'Besoins',splitWants:'Envies',splitFam:'Famille & obligations',splitSave:'Épargne',splitInv:'Investissement',splitLeft:'Reste',splitLeftIs:'Il vous reste',splitOver:'Vous dépensez plus que vos revenus de',
+splitHint:'Pistes pour ce reste (informations générales, pas un conseil personnalisé) : d’abord un fonds d’urgence de 3 à 6 mois de dépenses, puis une épargne de précaution, puis des placements longs comme l’assurance-vie ou un PEA.',
+splitRef:'Repère indicatif : 50 % besoins, 30 % envies, 20 % épargne et investissement.'
+});
+Object.assign(window.I18N.en,{
+authSub:'Your budget, your family sends, your goals: built for Africans living abroad. Sign in to find your data on all your devices.',
+d_trips:'A budget per trip',d_settings:'Language, exchange rate, backup',
+rateFixed:'The dollar is converted with the European Central Bank reference rate, updated automatically every month.',
+rateAuto:'automatic',rateNow:'Refresh now',rateOk:'Rate updated',rateFail:'Could not fetch the rate. The last known rate is kept.',rateBackup:'Fallback rate: not updated yet',
+c_save:'Savings',c_invest:'Investing',h_save:'Money set aside: savings account, emergency fund.',h_invest:'Investments: life insurance, stocks, projects that earn.',
+addMenuT:'Add',menuImport:'Import a statement or an invoice',menuImportH:'CSV or PDF file: the app sorts everything for you',menuManual:'Manual entry',menuManualH:'To add an expense by hand',
+impBtn:'Import a statement or an invoice',impHomeT:'Fill your month in one go',impHomeP:'Drop a bank statement or an invoice: the app reads the lines and suggests a category for each.',
+impTitle:'Import',impPick:'Choose a bank statement (CSV) or an invoice / statement in PDF.',
+impFormats:'Supported: CSV, and PDF files that contain text (downloaded statements or invoices). Photos and scanned PDFs are coming soon.',
+impPrivacy:'The file is read on your device: it is not sent to our servers. Only the transactions you confirm are saved.',
+impReading:'Reading the file…',impNone:'No transaction recognised in this file. Check the format or enter it by hand.',
+impScan:'This file is a photo or a scan: automatic reading is coming soon. Meanwhile, enter the expense by hand.',
+impPdfFail:'Could not read the PDF (connection or protected file). Try your bank’s CSV export.',
+impReview:'Check the suggested categories and untick what you do not want to import.',impUnsure:'Amounts read from a PDF: please check them before importing.',
+impFound:'transactions found',impDup:'already there',impCheck:'to check',impGo:'Import selection',impAgain:'Other file',impZero:'No line selected.',impDone:'transactions added',impNoLabel:'No label',impInvoice:'Invoice',
+fcfaTitle:'What your family receives (estimate)',fcfaRange:'Range min – max',fcfaConv:'Quick FCFA converter',
+fcfaNote:'Fixed rate: €1 = 655.957 FCFA. The provider’s fees and rate (Wave, Sendwave, LemFi…) can change the amount actually received.',
+splitTitle:'Where your money goes',splitNeeds:'Needs',splitWants:'Wants',splitFam:'Family & obligations',splitSave:'Savings',splitInv:'Investing',splitLeft:'Left',splitLeftIs:'You have left',splitOver:'You are spending more than your income by',
+splitHint:'Ideas for what is left (general information, not personal advice): first an emergency fund of 3 to 6 months of expenses, then a safety savings buffer, then long-term investments such as life insurance or index funds.',
+splitRef:'Rough guide: 50% needs, 30% wants, 20% savings and investing.'
+});

@@ -589,10 +589,16 @@ function txForm(){
   h+='<div class="chips" style="margin-top:12px">'+chip('st','pending',!!F.pending,esc(t('pendingOpt')))+'</div>';
   return h+btnRow('saveTx',F.id?'delTx':'');
 }
+function delBox(){
+  var id=F.id||F.accId,a=acc(id),n=S.tx.filter(function(x){return x.acc===id;}).length;
+  return '<div class="note bad" style="margin-top:12px"><p><strong>'+esc(t('delAccQ'))+' « '+esc(a?a.name:'')+' » ?</strong></p><p class="small">'+esc(t('delAccInfo'))+' ('+n+' '+esc(t('delAccOps'))+')</p></div>'+
+    '<div class="btns" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-a="delAccDo" data-v="keep">'+esc(t('delAccKeep'))+'</button>'+(n?'<button type="button" class="btn danger" data-a="delAccDo" data-v="all">'+esc(t('delAccAll'))+' ('+n+')</button>':'')+'<button type="button" class="btn ghost" data-a="delAccNo">'+esc(t('delAccCancel'))+'</button></div>';
+}
 function accForm(){
   var h='<label class="f">'+esc(t('accType'))+'</label><div class="chips">'+ATYPES.map(function(k){return sfchip('type',k,AEMO[k]+' '+esc(t('at_'+k)));}).join('')+'</div>'+
     inp('s-name','name',t('name'))+'<label class="f">'+esc(t('currency'))+'</label><div class="chips">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+
     inp('s-open','open',F.type==='loan'?t('loanLeft'):t('startBal'),'0','inputmode="decimal"');
+  if(F.id&&F.delStep)return h+delBox();
   return h+btnRow('saveAcc',F.id?'delAcc':'');
 }
 function accDetail(){
@@ -605,7 +611,8 @@ function accDetail(){
     else if(df<0)h+='<div class="note" style="margin-top:12px"><p><strong>'+esc(t('unexpl'))+' : '+esc(fmt(-df,a.cur))+'</strong></p><p class="small">'+esc(t('unexplHelp'))+'</p><div class="chips">'+CATS.map(function(k){return sfchip('dcat',k,CEMO[k]+' '+esc(t('c_'+k)));}).join('')+'</div><div class="acts"><button type="button" class="btn" data-a="addDiff">'+esc(t('addDiff'))+'</button></div></div>';
     else h+='<div class="note" style="margin-top:12px"><p><strong>'+esc(t('higher'))+' '+esc(fmt(df,a.cur))+'</strong></p><p class="small">'+esc(t('higherHelp'))+'</p><div class="acts"><button type="button" class="btn" data-a="addDiff">'+esc(t('addIncome'))+'</button></div></div>';
   }
-  return h+'<div class="btns"><button type="button" class="btn ghost" data-a="editAcc" data-v="'+a.id+'">'+esc(t('edit'))+'</button><button type="button" class="btn ghost" data-a="closeSheet">'+esc(t('close'))+'</button></div>';
+  if(F.delStep)return h+delBox();
+  return h+'<div class="btns"><button type="button" class="btn ghost" data-a="editAcc" data-v="'+a.id+'">'+esc(t('edit'))+'</button><button type="button" class="btn ghost" data-a="closeSheet">'+esc(t('close'))+'</button></div><button type="button" class="btn ghost full" data-a="delAcc" style="margin-top:8px">'+esc(t('delAcc'))+'</button>';
 }
 function goalForm(){
   return inp('s-gname','name',t('name'))+inp('s-gemo','emoji',t('emoji'),'🎯','maxlength="4"')+inp('s-gt','target',t('target')+' ('+curSym(F.cur)+')','','inputmode="decimal"')+'<label class="f">'+esc(t('currency'))+'</label><div class="chips">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+
@@ -685,7 +692,15 @@ ACT.saveAcc=function(){
   else S.accounts.push({id:uid(),name:name,type:F.type,cur:F.cur,open:o,since:ymd(new Date())});
   save();closeSheet();render();toast(t('saved'));
 };
-ACT.delAcc=function(){var id=F.id;S.accounts=S.accounts.filter(function(a){return a.id!==id;});S.tx.forEach(function(x){if(x.acc===id)x.acc='';if(x.to===id)x.to='';});S.rec.forEach(function(r){if(r.acc===id)r.acc='';});save();closeSheet();render();};
+ACT.delAcc=function(){F.delStep=1;redrawSheet();};
+ACT.delAccNo=function(){F.delStep=0;redrawSheet();};
+ACT.delAccDo=function(v){
+  var id=F.id||F.accId;if(!id)return;
+  if(v==='all')S.tx=S.tx.filter(function(x){return x.acc!==id;});
+  S.accounts=S.accounts.filter(function(a){return a.id!==id;});
+  S.tx.forEach(function(x){if(x.acc===id)x.acc='';if(x.to===id)x.to='';});S.rec.forEach(function(r){if(r.acc===id)r.acc='';});
+  save();closeSheet();render();toast(t('delAccDone'));
+};
 ACT.accOpen=function(v){F={accId:v,real:'',diff:null,dcat:'needs'};openSheet((acc(v)||{}).name||'',accDetail);};
 ACT.recCalc=function(){var a=acc(F.accId);if(!a||!String(F.real).trim()){toast(t('errBal'),true);return;}F.diff=num(F.real)-accBal(a);redrawSheet();};
 ACT.addDiff=function(){

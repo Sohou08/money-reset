@@ -226,7 +226,7 @@ function dlong(s){return new Intl.DateTimeFormat(loc(),{weekday:'long',day:'nume
 /* ---------- view state ---------- */
 var VM=ym(new Date()),TAB='home',F=null,SH=null;
 var SUBTABS=['more','recurring','trips','review','settings'];
-var UI={per:'1m',tf:'all',sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
+var UI={per:'1m',tf:'all',tc:'all',sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
 var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
 
@@ -251,6 +251,7 @@ function rangeBar(sent,min,max){
   var zl=min/top*100,zw=Math.max((max-min)/top*100,1.5),mk=Math.min(sent/top*100,99);
   return '<div class="range" role="img" aria-label="'+esc(t('yourRange'))+'"><div class="zone" style="left:'+zl.toFixed(1)+'%;width:'+zw.toFixed(1)+'%"></div><div class="mk" style="left:'+mk.toFixed(1)+'%"></div></div>';
 }
+function mlabel(k){var p=k.split('-');return new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+p[0],+p[1]-1,1));}
 function monthNav(){
   var p=VM.split('-'),label=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+p[0],+p[1]-1,1));
   return '<div class="monthnav"><button type="button" class="icon" data-a="prev" aria-label="'+esc(t('prevM'))+'">‹</button><strong>'+esc(label)+'</strong><button type="button" class="icon" data-a="next" aria-label="'+esc(t('nextM'))+'">›</button></div>';
@@ -337,10 +338,12 @@ V.goals=function(){
 };
 V.tx=function(){
   var c=calcM(VM),f=UI.tf;
-  var list=c.tx.filter(function(x){return f==='all'||x.type===f;});
+  var fc=UI.tc||'all';
+  var list=c.tx.filter(function(x){return (f==='all'||x.type===f)&&(fc==='all'||(x.type==='exp'&&x.cat===fc));});
   var h=monthNav()+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('income'))+'</p><p class="val pos">'+esc(M(c.incAct))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('expenses'))+'</p><p class="val">'+esc(M(c.spentAll))+'</p></div></div>';
   h+='<button type="button" class="btn full" style="margin-top:12px" data-a="impOpen">'+esc(t('impBtn'))+'</button>';
   h+='<div class="chips sm" style="margin:12px 0 4px">'+['all','exp','inc','tr'].map(function(k){return chip('tf',k,f===k,esc(t('tf_'+k)));}).join('')+'</div>';
+  if(c.spentAll>0){h+='<div class="chips sm" style="margin:4px 0 4px">'+chip('tc','all',fc==='all',esc(t('tf_all')))+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return chip('tc',k,fc===k,CEMO[k]+' '+esc(t('c_'+k))+' · '+esc(M(c.by[k])));}).join('')+'</div>';}
   if(!list.length)return h+'<div class="card flat" style="margin-top:12px"><p class="muted">'+esc(t('none'))+'</p></div>';
   var idx={};S.tx.forEach(function(x,i){idx[x.id]=i;});
   list.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:idx[b.id]-idx[a.id]);});
@@ -408,7 +411,7 @@ V.stats=function(){
   var ks=Object.keys(keys).sort().slice(-6),rows=ks.map(function(k){var cc=calcM(k);return {k:k,inc:cc.income,out:cc.fixed+cc.variable};});
   var topv=Math.max.apply(null,rows.map(function(r){return Math.max(r.inc,r.out);}).concat([1]));
   h+='<div class="card"><h3>'+esc(t('hist6'))+'</h3><div class="hist" style="margin-top:8px">'+rows.map(function(r){var pp=r.k.split('-'),lab=new Intl.DateTimeFormat(loc(),{month:'short',year:'2-digit'}).format(new Date(+pp[0],+pp[1]-1,1));
-    return '<span>'+esc(lab)+'</span><div>'+bar(r.inc/topv*100)+'<div class="bar"><i style="width:'+Math.min(100,r.out/topv*100).toFixed(1)+'%;background:var(--muted)"></i></div><span class="muted">'+esc(t('income'))+' '+esc(M(r.inc))+' · '+esc(t('outflow'))+' '+esc(M(r.out))+'</span></div>';}).join('')+'</div></div>';
+    return '<button type="button" class="link" data-a="goMonth" data-v="'+r.k+'" style="text-align:left">'+esc(lab)+' ›</button><div>'+bar(r.inc/topv*100)+'<div class="bar"><i style="width:'+Math.min(100,r.out/topv*100).toFixed(1)+'%;background:var(--muted)"></i></div><span class="muted">'+esc(t('income'))+' '+esc(M(r.inc))+' · '+esc(t('outflow'))+' '+esc(M(r.out))+'</span></div>';}).join('')+'</div></div>';
   var rate=c.income>0?(c.income-c.fixed-c.variable)/c.income*100:0;
   h+='<div class="card"><h3>'+esc(t('saveRate'))+'</h3><div class="big">'+Math.round(rate)+' %</div><p class="small muted">'+esc(t('saveRateHelp'))+'</p></div>';
   return h;
@@ -588,12 +591,14 @@ function tripForm(){
 /* ---------- actions ---------- */
 var ACT={};
 ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
+ACT.goMonth=function(v){VM=v;TAB='tx';UI.tf='all';UI.tc='all';render();window.scrollTo(0,0);};
 ACT.prev=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1]-2,1));render();};
 ACT.next=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1],1));render();};
 ACT.disp=function(v){S.disp=v;save();render();};
 ACT.lang=function(v){S.lang=v;nfCache={};save();render();};
 ACT.per=function(v){UI.per=v;render();};
 ACT.tf=function(v){UI.tf=v;render();};
+ACT.tc=function(v){UI.tc=v;render();};
 ACT.selDay=function(v){UI.sel=v;render();};
 ACT.closeSheet=function(){closeSheet();};
 ACT.sf=function(v){var i=v.indexOf(':');F[v.slice(0,i)]=v.slice(i+1);redrawSheet();};
@@ -995,9 +1000,9 @@ ACT.impOpen=function(){
   openSheet(t('impTitle'),importForm);
 };
 ACT.impGo=function(){
-  var n=0,L=S.learn=S.learn||{};
+  var n=0,L=S.learn=S.learn||{},mc={};
   F.rows.forEach(function(r){
-    if(!r.on)return;
+    if(!r.on)return;mc[r.date.slice(0,7)]=(mc[r.date.slice(0,7)]||0)+1;
     var inc=r.cat==='inc';
     S.tx.push(mkTx(r.date,inc?'inc':'exp',r.amt,F.cur,inc?'':r.cat,r.label,F.acc,{sub:(!inc&&r.cat==='family')?(r.sub||'mobile'):''}));
     n++;
@@ -1005,7 +1010,7 @@ ACT.impGo=function(){
   });
   var ks=Object.keys(L);if(ks.length>300)ks.slice(0,ks.length-300).forEach(function(k){delete L[k];});
   if(!n){toast(t('impZero'),true);return;}
-  UI.lastCur=F.cur;save();closeSheet();render();toast(n+' '+t('impDone'));
+  UI.lastCur=F.cur;var bm=Object.keys(mc).sort(function(a,b){return mc[b]-mc[a]||(a<b?1:-1);})[0];if(bm){VM=bm;TAB='tx';UI.tf='all';UI.tc='all';}save();closeSheet();render();window.scrollTo(0,0);toast(n+' '+t('impDone')+(bm?' · '+mlabel(bm):''));
 };
 ACT.rateNow=function(){autoRate(true);};
 window.MRX={toLines:toLines,parseCSV:parseCSV,parseLines:parseLines,guessRow:guessRow,parseAmt:parseAmt,parseDate:parseDate,keyOf:keyOf};

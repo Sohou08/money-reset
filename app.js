@@ -129,7 +129,7 @@ function demo(){
   S.months[cur]={saving:200,sendMin:240,sendMax:420,plan:{mobile:300,bank:100,cash:0},reflection:''};
 }
 S=load();
-if(!S)demo();
+if(!S)S=blankState(guessLang(),'EUR');
 fixShape();
 try{var k0='__t';localStorage.setItem(k0,'1');localStorage.removeItem(k0);}catch(e0){memOnly=true;}
 
@@ -297,6 +297,7 @@ V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
   var h='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
     '<div class="chips sm">'+['1m','ytd','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
+  if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)h='<section class="card"><h3>'+esc(t('welcomeT'))+'</h3><p class="muted">'+esc(t('welcomeP'))+'</p><ol class="small" style="padding-left:18px;margin:8px 0"><li>'+esc(t('welcome1'))+'</li><li>'+esc(t('welcome2'))+'</li><li>'+esc(t('welcome3'))+'</li></ol><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button><button type="button" class="btn ghost full" data-a="loadDemo">'+esc(t('welcomeDemo'))+'</button></section>'+h;
   if(monthTx(ym(new Date())).length<3)h+='<div class="card"><h3>'+esc(t('impHomeT'))+'</h3><p class="muted small">'+esc(t('impHomeP'))+'</p><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button></div>';
   h+='<h3 class="sec">'+esc(t('accounts'))+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
   if(!S.accounts.length)h+='<div class="card flat"><p class="muted">'+esc(t('noAcc2'))+'</p></div>';
@@ -749,6 +750,7 @@ ACT.restoreBk=function(){
 function wipe(){var lang=S.lang,disp=S.disp,rates=S.rates;S=blankState(lang,disp,rates);UI.confirmReset=false;UI.csv='';save();render();}
 ACT.resetAll=function(){if(!UI.confirmReset){UI.confirmReset=true;render();return;}wipe();};
 ACT.clearDemo=function(){wipe();};
+ACT.loadDemo=function(){demo();fixShape();save();TAB='home';render();window.scrollTo(0,0);};
 
 
 ACT.authMode=function(v){AUTH.mode=v;AUTH.msg='';render();};

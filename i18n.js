@@ -94,7 +94,7 @@ impReview:'Vérifiez les catégories proposées et décochez ce que vous ne voul
 impFound:'opérations trouvées',impDup:'déjà présente',impCheck:'à vérifier',impGo:'Importer la sélection',impAgain:'Autre fichier',impZero:'Aucune ligne sélectionnée.',impDone:'opérations ajoutées',impNoLabel:'Sans libellé',impInvoice:'Facture',
 fcfaTitle:'Ce que reçoit votre famille (estimation)',fcfaRange:'Fourchette min – max',fcfaConv:'Convertisseur rapide en FCFA',
 fcfaNote:'Taux fixe : 1 € = 655,957 FCFA. Les frais et le taux du prestataire (Wave, Sendwave, LemFi…) peuvent changer le montant réellement reçu.',
-splitTitle:'Où va votre argent',splitNeeds:'Besoins',splitWants:'Envies',splitFam:'Famille & obligations',splitSave:'Épargne',splitInv:'Investissement',splitLeft:'Reste',splitLeftIs:'Il vous reste',splitOver:'Vous dépensez plus que vos revenus de',
+splitTitle:'Où va votre argent',txSumTitle:'Résumé du mois',txByCatHint:'Touchez une rubrique pour ne voir que ses opérations.',txOfInc:'des revenus',splitNeeds:'Besoins',splitWants:'Envies',splitFam:'Famille & obligations',splitSave:'Épargne',splitInv:'Investissement',splitLeft:'Reste',splitLeftIs:'Il vous reste',splitOver:'Vous dépensez plus que vos revenus de',
 splitHint:'Pistes pour ce reste (informations générales, pas un conseil personnalisé) : d’abord un fonds d’urgence de 3 à 6 mois de dépenses, puis une épargne de précaution, puis des placements longs comme l’assurance-vie ou un PEA.',
 splitRef:'Repère indicatif : 50 % besoins, 30 % envies, 20 % épargne et investissement.'
 });
@@ -116,7 +116,7 @@ impReview:'Check the suggested categories and untick what you do not want to imp
 impFound:'transactions found',impDup:'already there',impCheck:'to check',impGo:'Import selection',impAgain:'Other file',impZero:'No line selected.',impDone:'transactions added',impNoLabel:'No label',impInvoice:'Invoice',
 fcfaTitle:'What your family receives (estimate)',fcfaRange:'Range min – max',fcfaConv:'Quick FCFA converter',
 fcfaNote:'Fixed rate: €1 = 655.957 FCFA. The provider’s fees and rate (Wave, Sendwave, LemFi…) can change the amount actually received.',
-splitTitle:'Where your money goes',splitNeeds:'Needs',splitWants:'Wants',splitFam:'Family & obligations',splitSave:'Savings',splitInv:'Investing',splitLeft:'Left',splitLeftIs:'You have left',splitOver:'You are spending more than your income by',
+splitTitle:'Where your money goes',txSumTitle:'Month summary',txByCatHint:'Tap a category to see only its transactions.',txOfInc:'of income',splitNeeds:'Needs',splitWants:'Wants',splitFam:'Family & obligations',splitSave:'Savings',splitInv:'Investing',splitLeft:'Left',splitLeftIs:'You have left',splitOver:'You are spending more than your income by',
 splitHint:'Ideas for what is left (general information, not personal advice): first an emergency fund of 3 to 6 months of expenses, then a safety savings buffer, then long-term investments such as life insurance or index funds.',
 splitRef:'Rough guide: 50% needs, 30% wants, 20% savings and investing.'
 });

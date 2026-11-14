@@ -340,10 +340,23 @@ V.tx=function(){
   var c=calcM(VM),f=UI.tf;
   var fc=UI.tc||'all';
   var list=c.tx.filter(function(x){return (f==='all'||x.type===f)&&(fc==='all'||(x.type==='exp'&&x.cat===fc));});
-  var h=monthNav()+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('income'))+'</p><p class="val pos">'+esc(M(c.incAct))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('expenses'))+'</p><p class="val">'+esc(M(c.spentAll))+'</p></div></div>';
+  var d=splitData(c),pc=d.base>0?Math.min(100,d.used/d.base*100):(d.used>0?100:0);
+  var h=monthNav()+'<div class="card"><h3>'+esc(t('txSumTitle'))+'</h3>';
+  if(d.base<=0&&d.used<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
+  else{
+    h+=(d.left>=0?'<p class="muted" style="margin:0">'+esc(t('splitLeftIs'))+'</p><div class="big pos">'+esc(M(d.left))+'</div>':'<p class="neg" style="margin:0">'+esc(t('splitOver'))+'</p><div class="big neg">'+esc(M(-d.left))+'</div>')+
+      '<div class="stack" style="margin:8px 0"><i style="width:'+pc.toFixed(1)+'%;background:'+(d.left>=0?'var(--gold,#C9972B)':'#B5412F')+'"></i></div>'+
+      '<div style="display:flex;justify-content:space-between"><span>'+esc(t('income'))+'</span><strong class="pos">'+esc(M(d.base))+'</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px"><span>'+esc(t('expenses'))+'</span><strong>'+esc(M(d.used))+(d.base>0?' <span class="muted small">'+Math.round(d.used/d.base*100)+' %</span>':'')+'</strong></div>';
+  }
+  h+='</div>';
+  if(c.spentAll>0){
+    h+='<div class="card" style="padding:8px 16px"><p class="small muted" style="margin:6px 0">'+esc(t('txByCatHint'))+'</p>'+
+      CATS.filter(function(k){return c.by[k]>0;}).map(function(k){var on=fc===k;
+        return '<button type="button" class="row" data-a="tc" data-v="'+(on?'all':k)+'" aria-pressed="'+(on?'true':'false')+'"'+(on?' style="background:var(--soft)"':'')+'><span class="ico">'+CEMO[k]+'</span><span class="mid"><span class="t">'+esc(t('c_'+k))+'</span><span class="muted small">'+(d.base>0?Math.round(c.by[k]/d.base*100)+' % '+esc(t('txOfInc')):'')+'</span></span><span class="amt">'+esc(M(c.by[k]))+'</span></button>';}).join('')+'</div>';
+  }
   h+='<button type="button" class="btn full" style="margin-top:12px" data-a="impOpen">'+esc(t('impBtn'))+'</button>';
   h+='<div class="chips sm" style="margin:12px 0 4px">'+['all','exp','inc','tr'].map(function(k){return chip('tf',k,f===k,esc(t('tf_'+k)));}).join('')+'</div>';
-  if(c.spentAll>0){h+='<div class="chips sm" style="margin:4px 0 4px">'+chip('tc','all',fc==='all',esc(t('tf_all')))+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return chip('tc',k,fc===k,CEMO[k]+' '+esc(t('c_'+k))+' · '+esc(M(c.by[k])));}).join('')+'</div>';}
   if(!list.length)return h+'<div class="card flat" style="margin-top:12px"><p class="muted">'+esc(t('none'))+'</p></div>';
   var idx={};S.tx.forEach(function(x,i){idx[x.id]=i;});
   list.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:idx[b.id]-idx[a.id]);});

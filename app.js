@@ -1025,7 +1025,9 @@ function importForm(){
     var h='<p class="small muted">'+esc(t('impReview'))+'</p>';
     if(F.src==='pdf')h+='<div class="note"><p class="small" style="margin:0">'+esc(t('impUnsure'))+'</p></div>';
     h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true)+'<label class="f">'+esc(t('currency'))+'</label><div class="chips">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>';
-    h+='<h3 style="margin-top:16px">'+esc(F.rows.length+' '+t('impFound'))+'</h3>';
+    var nsel=F.rows.filter(function(r){return r.on;}).length;
+    h+='<h3 style="margin-top:16px">'+esc(F.rows.length+' '+t('impFound'))+'</h3><p class="small muted" style="margin:0 0 8px">'+nsel+' / '+F.rows.length+' '+esc(t('impSelCount'))+'</p>'+
+      '<div class="chips sm" style="margin-bottom:10px"><button type="button" class="chip" data-a="impSel" data-v="all">'+esc(t('impAll'))+'</button><button type="button" class="chip" data-a="impSel" data-v="new">'+esc(t('impNew'))+'</button><button type="button" class="chip" data-a="impSel" data-v="none">'+esc(t('impNone'))+'</button></div>';
     h+=F.rows.map(function(r,i){
       var opts='<option value="inc"'+(r.cat==='inc'?' selected':'')+'>'+esc(CEMO.inc+' '+t('m_inc'))+'</option>'+CATS.map(function(k){return '<option value="'+k+'"'+(r.cat===k?' selected':'')+'>'+esc(CEMO[k]+' '+t('c_'+k))+'</option>';}).join('');
       return '<div class="irow'+(r.dup?' dup':'')+'"><label class="ichk"><input type="checkbox" data-imp="'+i+'" data-k="on"'+(r.on?' checked':'')+'><span class="t">'+esc(r.label)+'</span></label>'+
@@ -1033,7 +1035,7 @@ function importForm(){
         '<span class="muted small">'+esc(dfmt(r.date))+(r.dup?' · '+esc(t('impDup')):'')+(!r.known?' · '+esc(t('impCheck')):'')+'</span>'+
         '<select class="in" data-imp="'+i+'" data-k="cat" aria-label="'+esc(t('category'))+'">'+opts+'</select></div>';
     }).join('');
-    return h+'<div class="btns" style="grid-template-columns:1fr 1fr"><button type="button" class="btn" data-a="impGo">'+esc(t('impGo'))+'</button><button type="button" class="btn ghost" data-a="impOpen">'+esc(t('impAgain'))+'</button></div>';
+    return h+'<div class="btns" style="grid-template-columns:1fr 1fr"><button type="button" class="btn" data-a="impGo">'+esc(t('impGo'))+' ('+nsel+')</button><button type="button" class="btn ghost" data-a="impOpen">'+esc(t('impAgain'))+'</button></div>';
   }
   return '<p class="muted">'+esc(t('impPick'))+'</p><input class="in" type="file" id="imp-file" accept=".csv,.txt,text/csv,.pdf,application/pdf,image/*"'+(F.busy?' disabled':'')+'>'+
     '<p class="small" role="alert" style="min-height:1.2em;margin:10px 0">'+esc(F.msg||'')+'</p>'+
@@ -1041,6 +1043,7 @@ function importForm(){
     '<button type="button" class="btn ghost full" data-a="addTx">'+esc(t('menuManual'))+'</button>';
 }
 ACT.addMenu=function(){openSheet(t('addMenuT'),menuForm);};
+ACT.impSel=function(v){if(!F||!F.rows)return;F.rows.forEach(function(r){r.on=(v==='all')?true:(v==='none'?false:!r.dup);});redrawSheet();};
 ACT.impOpen=function(){
   var a=S.accounts[0];
   F={step:'pick',rows:[],acc:a?a.id:'',cur:a&&CURS.indexOf(a.cur)>=0?a.cur:S.disp,msg:'',busy:false,src:''};
@@ -1111,7 +1114,7 @@ document.addEventListener('change',function(e){
   if(el.id==='imp-file'){handleFile(el.files&&el.files[0]);return;}
   if(el.hasAttribute('data-imp')&&F&&F.rows){
     var r=F.rows[+el.getAttribute('data-imp')];
-    if(r){if(el.getAttribute('data-k')==='on')r.on=el.checked;else{r.cat=el.value;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';redrawSheet();}}
+    if(r){if(el.getAttribute('data-k')==='on'){r.on=el.checked;redrawSheet();}else{r.cat=el.value;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';redrawSheet();}}
     return;
   }
   if(el.hasAttribute('data-rule')){setRule(el.getAttribute('data-rule'),el.value);return;}

@@ -75,13 +75,14 @@ function authMsg(e){
 }
 
 /* ---------- state ---------- */
-function blankState(lang,disp,rates){return {v:2,lang:lang,disp:disp||'EUR',demo:false,rates:rates||{usd:1.12,updated:null},accounts:[],tx:[],rec:[],goals:[],trips:[],oblig:[],varPlan:0,env:{},months:{},learn:{}};}
+function blankState(lang,disp,rates){return {v:2,lang:lang,disp:disp||'EUR',demo:false,rates:rates||{usd:1.12,updated:null},accounts:[],tx:[],rec:[],goals:[],trips:[],oblig:[],varPlan:0,env:{},months:{},learn:{},rule:{n:50,w:30,s:20}};}
 function blankMonth(){return {saving:0,sendMin:0,sendMax:0,plan:{mobile:0,bank:0,cash:0},reflection:''};}
 function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.v===2)return o;}}catch(e){memOnly=true;}return null;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){memOnly=true;}push();}
 function fixShape(){
   var b=blankState('fr');Object.keys(b).forEach(function(k){if(S[k]===undefined)S[k]=b[k];});
   if(CURS.indexOf(S.disp)<0)S.disp='EUR';if(S.lang!=='fr'&&S.lang!=='en')S.lang='fr';
+  var R=S.rule;if(!R||!(R.n>=0)||!(R.w>=0)||!(R.s>=0)||R.n+R.w+R.s!==100)S.rule={n:50,w:30,s:20};
   migXof();
 }
 function migXof(){
@@ -226,7 +227,7 @@ function dlong(s){return new Intl.DateTimeFormat(loc(),{weekday:'long',day:'nume
 /* ---------- view state ---------- */
 var VM=ym(new Date()),TAB='home',F=null,SH=null;
 var SUBTABS=['more','recurring','trips','review','settings'];
-var UI={per:'1m',tf:'all',tc:'all',sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
+var UI={per:'1m',tf:'all',tc:'all',sv:'bilan',span:1,sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
 var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
 
@@ -340,23 +341,10 @@ V.tx=function(){
   var c=calcM(VM),f=UI.tf;
   var fc=UI.tc||'all';
   var list=c.tx.filter(function(x){return (f==='all'||x.type===f)&&(fc==='all'||(x.type==='exp'&&x.cat===fc));});
-  var d=splitData(c),pc=d.base>0?Math.min(100,d.used/d.base*100):(d.used>0?100:0);
-  var h=monthNav()+'<div class="card"><h3>'+esc(t('txSumTitle'))+'</h3>';
-  if(d.base<=0&&d.used<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
-  else{
-    h+=(d.left>=0?'<p class="muted" style="margin:0">'+esc(t('splitLeftIs'))+'</p><div class="big pos">'+esc(M(d.left))+'</div>':'<p class="neg" style="margin:0">'+esc(t('splitOver'))+'</p><div class="big neg">'+esc(M(-d.left))+'</div>')+
-      '<div class="stack" style="margin:8px 0"><i style="width:'+pc.toFixed(1)+'%;background:'+(d.left>=0?'var(--gold,#C9972B)':'#B5412F')+'"></i></div>'+
-      '<div style="display:flex;justify-content:space-between"><span>'+esc(t('income'))+'</span><strong class="pos">'+esc(M(d.base))+'</strong></div>'+
-      '<div style="display:flex;justify-content:space-between;margin-top:6px"><span>'+esc(t('expenses'))+'</span><strong>'+esc(M(d.used))+(d.base>0?' <span class="muted small">'+Math.round(d.used/d.base*100)+' %</span>':'')+'</strong></div>';
-  }
-  h+='</div>';
-  if(c.spentAll>0){
-    h+='<div class="card" style="padding:8px 16px"><p class="small muted" style="margin:6px 0">'+esc(t('txByCatHint'))+'</p>'+
-      CATS.filter(function(k){return c.by[k]>0;}).map(function(k){var on=fc===k;
-        return '<button type="button" class="row" data-a="tc" data-v="'+(on?'all':k)+'" aria-pressed="'+(on?'true':'false')+'"'+(on?' style="background:var(--soft)"':'')+'><span class="ico">'+CEMO[k]+'</span><span class="mid"><span class="t">'+esc(t('c_'+k))+'</span><span class="muted small">'+(d.base>0?Math.round(c.by[k]/d.base*100)+' % '+esc(t('txOfInc')):'')+'</span></span><span class="amt">'+esc(M(c.by[k]))+'</span></button>';}).join('')+'</div>';
-  }
+  var h=monthNav()+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('income'))+'</p><p class="val pos">'+esc(M(c.incAct))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('expenses'))+'</p><p class="val">'+esc(M(c.spentAll))+'</p></div></div>';
   h+='<button type="button" class="btn full" style="margin-top:12px" data-a="impOpen">'+esc(t('impBtn'))+'</button>';
   h+='<div class="chips sm" style="margin:12px 0 4px">'+['all','exp','inc','tr'].map(function(k){return chip('tf',k,f===k,esc(t('tf_'+k)));}).join('')+'</div>';
+  if(c.spentAll>0)h+='<div class="chips sm" style="margin:0 0 4px">'+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return chip('tc',fc===k?'all':k,fc===k,CEMO[k]+' '+esc(t('c_'+k)));}).join('')+'</div>';
   if(!list.length)return h+'<div class="card flat" style="margin-top:12px"><p class="muted">'+esc(t('none'))+'</p></div>';
   var idx={};S.tx.forEach(function(x,i){idx[x.id]=i;});
   list.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:idx[b.id]-idx[a.id]);});
@@ -389,12 +377,12 @@ V.cal=function(){
   h+=(dayTx.length||dayRec.length)?'<div class="card" style="padding:4px 16px">'+dayRec.map(function(o){return recRow(o,'valRec');}).join('')+dayTx.map(function(x){return txRow(x,false);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('none'))+'</p></div>';
   return h;
 };
-function splitData(c){
+function splitData(c,k){k=k||VM;
   var b={needs:c.by.needs+c.by.extra,wants:c.by.wants+c.by.culture,fam:c.by.family,sav:c.by.save,inv:c.by.invest};
   c.tx.forEach(function(x){if(x.type!=='tr')return;var a=acc(x.to);if(a&&a.type==='savings')b.sav+=x.eur;else if(a&&a.type==='invest')b.inv+=x.eur;});
-  recOcc(VM).forEach(function(o){
-    if(o.done||o.r.type!=='exp')return;var e=eurOf(o.r),k=o.r.cat;
-    if(k==='wants'||k==='culture')b.wants+=e;else if(k==='family')b.fam+=e;else if(k==='save')b.sav+=e;else if(k==='invest')b.inv+=e;else b.needs+=e;
+  recOcc(k).forEach(function(o){
+    if(o.done||o.r.type!=='exp')return;var e=eurOf(o.r),q=o.r.cat;
+    if(q==='wants'||q==='culture')b.wants+=e;else if(q==='family')b.fam+=e;else if(q==='save')b.sav+=e;else if(q==='invest')b.inv+=e;else b.needs+=e;
   });
   var used=b.needs+b.wants+b.fam+b.sav+b.inv;
   return {b:b,used:used,base:c.income,left:c.income-used};
@@ -411,23 +399,66 @@ function splitCard(c){
   else h+='<p class="neg" style="margin-top:12px"><strong>'+esc(t('splitOver'))+' '+esc(M(-d.left))+'</strong></p>';
   return h+'<p class="small muted" style="margin-top:8px">'+esc(t('splitRef'))+'</p></div>';
 }
-V.stats=function(){
-  var c=calcM(VM),h=monthNav();
-  h+=splitCard(c);
-  h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3>';
-  if(c.spentAll<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
-  else h+='<div class="donutwrap">'+donut(c.by,c.spentAll)+'<div class="legend" style="flex-direction:column;flex:1;min-width:140px">'+CATS.map(function(k){return '<span><i style="background:'+CCOL[k]+'"></i>'+esc(t('c_'+k))+' · '+esc(M(c.by[k]))+'</span>';}).join('')+'</div></div>';
-  h+='</div>';
-  var top=c.tx.filter(function(x){return x.type==='exp';}).sort(function(a,b){return b.eur-a.eur;}).slice(0,5);
+var RC={n:'#3F7D6B',w:'#D2693E',s:'#4C9AA8'};
+function r3(k){var c=calcM(k),d=splitData(c,k);return {k:k,c:c,inc:d.base,n:d.b.needs+d.b.fam,w:d.b.wants,s:d.b.sav+d.b.inv,used:d.used,left:d.left};}
+function r3sum(keys){var a={inc:0,n:0,w:0,s:0,used:0,left:0,by:{},parts:[]};CATS.forEach(function(q){a.by[q]=0;});keys.forEach(function(k){var x=r3(k);a.parts.push(x);['inc','n','w','s','used','left'].forEach(function(f){a[f]+=x[f];});CATS.forEach(function(q){a.by[q]+=x.c.by[q];});});return a;}
+function monthsEnding(k,n){var p=k.split('-'),o=[];for(var i=n-1;i>=0;i--)o.push(ym(new Date(+p[0],+p[1]-1-i,1)));return o;}
+function pct(v,base){return base>0?Math.round(v/base*100):0;}
+function ruleEditor(){
+  var R=S.rule;
+  return '<div class="card"><h3>'+esc(t('ruleTitle'))+'</h3><p class="small muted" style="margin:0 0 8px">'+esc(t('ruleHelp'))+'</p>'+
+    [['n','ruleN'],['w','ruleW'],['s','ruleS']].map(function(r){return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+RC[r[0]]+';margin-right:8px"></i>'+esc(t(r[1]))+'</span><span style="white-space:nowrap"><input class="in" style="width:72px;display:inline-block;text-align:right" inputmode="numeric" data-rule="'+r[0]+'" value="'+R[r[0]]+'" aria-label="'+esc(t(r[1]))+'"> %</span></div>';}).join('')+
+    '<p class="small muted" style="margin:10px 0 0">'+esc(t('ruleTotal'))+' '+(R.n+R.w+R.s)+' %</p><button type="button" class="btn ghost full" data-a="ruleReset">'+esc(t('ruleReset'))+'</button><p class="small muted" style="margin-top:8px">'+esc(t('ruleFam'))+'</p></div>';
+}
+function repCard(a,title){
+  var base=a.inc>0?a.inc:a.used,R=S.rule,h='<div class="card"><h3>'+esc(title)+'</h3>';
+  if(base<=0)return h+'<p class="muted">'+esc(t('noSpend'))+'</p></div>';
+  var rows=[['n','ruleN',a.n,R.n,true],['w','ruleW',a.w,R.w,true],['s','ruleS',a.s,R.s,false]];
+  var left=Math.max(0,a.inc-a.used),den=Math.max(base,a.used,0.01);
+  function stack(vals){return '<div class="stack">'+vals.map(function(v){return '<i style="width:'+(v[0]/den*100).toFixed(1)+'%;background:'+v[1]+'"></i>';}).join('')+'</div>';}
+  h+='<p class="small muted" style="margin:0">'+esc(t('rReal'))+'</p>'+stack(rows.map(function(r){return [r[2],RC[r[0]]];}).concat([[left,'var(--line)']]));
+  h+='<p class="small muted" style="margin:6px 0 0">'+esc(t('rTarget'))+'</p>'+stack(rows.map(function(r){return [base*r[3]/100,RC[r[0]]];}));
+  h+=rows.map(function(r){var p=pct(r[2],base),diff=r[2]-base*r[3]/100,bad=r[4]?diff>0.5:diff<-0.5,msg;
+    if(r[4])msg=diff>0.5?t('rOver')+' '+M(diff):t('rOk');else msg=diff<-0.5?t('rUnder')+' '+M(-diff):t('rOk');
+    return '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+RC[r[0]]+';margin-right:8px"></i><strong>'+esc(t(r[1]))+'</strong></span><span><strong>'+esc(M(r[2]))+'</strong></span></div>'+
+      '<div class="small muted" style="display:flex;justify-content:space-between"><span>'+p+' % · '+esc(t('rTarget'))+' '+r[3]+' %</span><span class="'+(bad?'neg':'pos')+'">'+esc(msg)+'</span></div>'+bar(r[3]>0?r[2]/(base*r[3]/100)*100:(r[2]>0?100:0),bad)+'</div>';}).join('');
+  h+='<div style="display:flex;justify-content:space-between;margin-top:14px"><span>'+esc(t('rLeft'))+'</span><strong class="'+(a.inc-a.used>=0?'pos':'neg')+'">'+esc(M(a.inc-a.used))+'</strong></div>';
+  return h+'</div>';
+}
+function bilanView(){
+  var a=r3sum([VM]),c=a.parts[0].c,h=monthNav();
+  var base=a.inc,pc=base>0?Math.min(100,a.used/base*100):(a.used>0?100:0),left=a.inc-a.used;
+  h+='<div class="card"><h3>'+esc(t('txSumTitle'))+'</h3>';
+  if(a.inc<=0&&a.used<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
+  else{
+    h+=(left>=0?'<p class="muted" style="margin:0">'+esc(t('splitLeftIs'))+'</p><div class="big pos">'+esc(M(left))+'</div>':'<p class="neg" style="margin:0">'+esc(t('splitOver'))+'</p><div class="big neg">'+esc(M(-left))+'</div>')+
+      '<div class="stack" style="margin:8px 0"><i style="width:'+pc.toFixed(1)+'%;background:'+(left>=0?'var(--gold,#C9972B)':'#B5412F')+'"></i></div>'+
+      '<div style="display:flex;justify-content:space-between"><span>'+esc(t('income'))+'</span><strong class="pos">'+esc(M(a.inc))+'</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px"><span>'+esc(t('expenses'))+'</span><strong>'+esc(M(a.used))+(base>0?' <span class="muted small">'+Math.round(a.used/base*100)+' %</span>':'')+'</strong></div>';
+    if(left>0)h+='<p class="small muted" style="margin-top:10px">'+esc(t('splitHint'))+'</p>';
+  }
+  h+='</div>'+repCard(a,t('ruleCompare'));
+  if(c.spentAll>0)h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3><div class="donutwrap">'+donut(c.by,c.spentAll)+'<div class="legend" style="flex-direction:column;flex:1;min-width:140px">'+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return '<span><i style="background:'+CCOL[k]+'"></i>'+esc(t('c_'+k))+' · '+esc(M(c.by[k]))+'</span>';}).join('')+'</div></div></div>';
+  var top=c.tx.filter(function(x){return x.type==='exp';}).sort(function(x,y){return y.eur-x.eur;}).slice(0,5);
   if(top.length)h+='<div class="card" style="padding:12px 16px"><h3>'+esc(t('topExp'))+'</h3>'+top.map(function(x){return txRow(x,true);}).join('')+'</div>';
-  var keys={};Object.keys(S.months).forEach(function(k){keys[k]=1;});S.tx.forEach(function(x){keys[x.date.slice(0,7)]=1;});
-  var ks=Object.keys(keys).sort().slice(-6),rows=ks.map(function(k){var cc=calcM(k);return {k:k,inc:cc.income,out:cc.fixed+cc.variable};});
-  var topv=Math.max.apply(null,rows.map(function(r){return Math.max(r.inc,r.out);}).concat([1]));
-  h+='<div class="card"><h3>'+esc(t('hist6'))+'</h3><div class="hist" style="margin-top:8px">'+rows.map(function(r){var pp=r.k.split('-'),lab=new Intl.DateTimeFormat(loc(),{month:'short',year:'2-digit'}).format(new Date(+pp[0],+pp[1]-1,1));
-    return '<button type="button" class="link" data-a="goMonth" data-v="'+r.k+'" style="text-align:left">'+esc(lab)+' ›</button><div>'+bar(r.inc/topv*100)+'<div class="bar"><i style="width:'+Math.min(100,r.out/topv*100).toFixed(1)+'%;background:var(--muted)"></i></div><span class="muted">'+esc(t('income'))+' '+esc(M(r.inc))+' · '+esc(t('outflow'))+' '+esc(M(r.out))+'</span></div>';}).join('')+'</div></div>';
-  var rate=c.income>0?(c.income-c.fixed-c.variable)/c.income*100:0;
+  h+='<div class="card"><h3>'+esc(t('q4'))+'</h3><textarea class="in" id="r-text" placeholder="'+esc(t('reflPh'))+'">'+esc(c.m.reflection)+'</textarea><button type="button" class="btn full" data-a="saveRefl">'+esc(t('saveRefl'))+'</button></div>';
+  return h+ruleEditor();
+}
+function globalView(){
+  var n=UI.span||1,keys=monthsEnding(VM,n),a=r3sum(keys),h=monthNav();
+  h+='<div class="chips sm" style="margin:4px 0 8px">'+[1,2,3].map(function(k){return chip('span',String(k),n===k,esc(k+' '+t(k>1?'months':'month1')));}).join('')+'</div>';
+  if(n>1)h+='<p class="small muted" style="margin:0 0 8px">'+esc(mlabel(keys[0]))+' → '+esc(mlabel(keys[n-1]))+'</p>';
+  h+=repCard(a,t(n>1?'rPeriod':'ruleCompare'));
+  var topv=Math.max.apply(null,a.parts.map(function(r){return Math.max(r.inc,r.used);}).concat([1]));
+  h+='<div class="card"><h3>'+esc(t('hist6'))+'</h3><div class="hist" style="margin-top:8px">'+a.parts.map(function(r){var pp=r.k.split('-'),lab=new Intl.DateTimeFormat(loc(),{month:'short',year:'2-digit'}).format(new Date(+pp[0],+pp[1]-1,1));
+    return '<button type="button" class="link" data-a="goMonth" data-v="'+r.k+'" style="text-align:left">'+esc(lab)+' ›</button><div>'+bar(r.inc/topv*100)+'<div class="bar"><i style="width:'+Math.min(100,r.used/topv*100).toFixed(1)+'%;background:var(--muted)"></i></div><span class="muted">'+esc(t('income'))+' '+esc(M(r.inc))+' · '+esc(t('outflow'))+' '+esc(M(r.used))+'</span></div>';}).join('')+'</div></div>';
+  var rate=a.inc>0?(a.inc-a.used+a.s)/a.inc*100:0;
   h+='<div class="card"><h3>'+esc(t('saveRate'))+'</h3><div class="big">'+Math.round(rate)+' %</div><p class="small muted">'+esc(t('saveRateHelp'))+'</p></div>';
-  return h;
+  return h+ruleEditor();
+}
+V.stats=function(){
+  var v=UI.sv||'bilan';
+  return '<div class="chips" style="margin:0 0 10px">'+chip('sv','bilan',v==='bilan',esc(t('svBilan')))+chip('sv','global',v==='global',esc(t('svGlobal')))+'</div>'+(v==='global'?globalView():bilanView());
 };
 function fcfa(e){return fmt(e*XOF,'XOF');}
 function sumSend(){
@@ -450,7 +481,7 @@ V.send=function(){
     '<h3 style="margin-top:18px">'+esc(t('planL'))+'</h3>'+SENDS.map(function(s){return moneyField('f-p-'+s,'plan_'+s,m.plan[s]||0,t('sl_'+s));}).join('')+'<p class="small muted">'+esc(t('fieldsNote'))+'</p></div>';
 };
 V.more=function(){
-  var items=[['recurring','🔁'],['trips','✈️'],['review','📝'],['settings','⚙️']];
+  var items=[['recurring','🔁'],['trips','✈️'],['settings','⚙️']];
   return '<div class="card" style="padding:4px 16px">'+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
 };
 V.recurring=function(){
@@ -612,6 +643,9 @@ ACT.lang=function(v){S.lang=v;nfCache={};save();render();};
 ACT.per=function(v){UI.per=v;render();};
 ACT.tf=function(v){UI.tf=v;render();};
 ACT.tc=function(v){UI.tc=v;render();};
+ACT.sv=function(v){UI.sv=v;render();window.scrollTo(0,0);};
+ACT.span=function(v){UI.span=+v||1;render();};
+ACT.ruleReset=function(){S.rule={n:50,w:30,s:20};save();render();};
 ACT.selDay=function(v){UI.sel=v;render();};
 ACT.closeSheet=function(){closeSheet();};
 ACT.sf=function(v){var i=v.indexOf(':');F[v.slice(0,i)]=v.slice(i+1);redrawSheet();};
@@ -1054,6 +1088,11 @@ var FIELD={
 SENDS.forEach(function(s){FIELD['plan_'+s]=function(el){var m=mset(VM);m.plan=m.plan||{};m.plan[s]=readEur(el);};});
 document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var f=ACT[b.getAttribute('data-a')];if(f)f(b.getAttribute('data-v'),b);});
 function sheetField(el){if(F&&el.hasAttribute('data-s'))F[el.getAttribute('data-s')]=el.value;}
+function setRule(key,val){
+  var R=S.rule,v=Math.max(0,Math.min(100,Math.round(num(val)||0))),o=['n','w','s'].filter(function(k){return k!==key;}),rest=100-v,so=R[o[0]]+R[o[1]];
+  var a=so>0?Math.round(rest*R[o[0]]/so):Math.round(rest/2);
+  R[key]=v;R[o[0]]=a;R[o[1]]=rest-a;save();render();
+}
 function applyField(el){
   if(el.hasAttribute('data-f')){var f=FIELD[el.getAttribute('data-f')];if(f){f(el);save();refresh();}}
   else if(el.hasAttribute('data-l')){
@@ -1075,6 +1114,7 @@ document.addEventListener('change',function(e){
     if(r){if(el.getAttribute('data-k')==='on')r.on=el.checked;else{r.cat=el.value;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';redrawSheet();}}
     return;
   }
+  if(el.hasAttribute('data-rule')){setRule(el.getAttribute('data-rule'),el.value);return;}
   sheetField(el);applyField(el);
 });
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&SH)closeSheet();});

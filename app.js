@@ -472,10 +472,28 @@ V.stats=function(){
   return '<div class="chips" style="margin:0 0 10px">'+chip('sv','bilan',v==='bilan',esc(t('svBilan')))+chip('sv','global',v==='global',esc(t('svGlobal')))+'</div>'+(v==='global'?globalView():bilanView());
 };
 function fcfa(e){return fmt(e*XOF,'XOF');}
+function sendList(c){
+  var m=c.m,max=m.sendMax,cum=0;
+  var l=c.tx.filter(function(x){return x.type==='exp'&&x.cat==='family'&&SENDS.indexOf(x.sub)>=0;}).sort(function(p,q){return p.date<q.date?-1:(p.date>q.date?1:0);});
+  if(!l.length)return '<p class="muted">'+esc(t('noSend'))+'</p>';
+  return '<div style="padding:0 0 4px">'+l.map(function(x){
+    cum+=x.eur;var over=max>0&&cum>max;
+    return '<button type="button" class="row" data-a="editTx" data-v="'+x.id+'"><span class="ico">🌍</span><span class="mid"><span class="t">'+esc(x.note||t('c_family'))+'</span><span class="muted small">'+esc(dfmt(x.date))+' · '+esc(t('sn_'+x.sub))+' · '+esc(t('cumul'))+' '+esc(M(cum))+(max>0?' <span class="pill '+(over?'bad':'good')+'">'+esc(t(over?'st_above':'st_in'))+'</span>':'')+'</span></span><span class="amt">−'+esc(fmt(x.amt,x.cur))+'</span></button>';
+  }).join('')+'</div>';
+}
 function sumSend(){
   var c=calcM(VM),m=c.m,sg=suggest(VM),min=m.sendMin,max=m.sendMax,sent=c.sent,ss=sendSummary(c),st=ss.st;
-  var h='<div class="card"><p class="muted" style="margin:0">'+esc(t('sentSoFar'))+'</p><div class="big">'+M2(sent)+'</div>'+rangeBar(sent,min,max)+'<p class="small muted" style="margin:0">'+esc(t('range'))+' '+esc(M(min))+' – '+esc(M(max))+'</p><p style="margin-top:10px"><span class="pill '+ss.cls+'">'+esc(t('st_'+st))+'</span></p>';
-  if(st==='below')h+='<p>'+esc(t('toMin'))+' <strong>'+esc(M(min-sent))+'</strong></p>';
+  var h='<div class="card"><p class="muted" style="margin:0">'+esc(t('sentSoFar'))+'</p><div class="big">'+M2(sent)+'</div>';
+  if(st==='none'){
+    h+='<p class="muted">'+esc(t('rangeEmpty'))+'</p><button type="button" class="btn full" data-a="editRange">'+esc(t('rangeSet'))+'</button></div>';
+  }else{
+    h+=rangeBar(sent,min,max)+'<p class="small muted" style="margin:0">'+esc(t('range'))+' '+esc(M(min))+' – '+esc(M(max))+'</p><p style="margin-top:10px"><span class="pill '+ss.cls+'">'+esc(t('st_'+st))+'</span></p>';
+    if(st==='below')h+='<p>'+esc(t('toMin'))+' <strong>'+esc(M(min-sent))+'</strong></p>';
+    if(st==='in')h+='<p>'+esc(t('leftToMax'))+' <strong>'+esc(M(max-sent))+'</strong></p>';
+    if(st==='above')h+='<p class="neg">'+esc(t('overMax'))+' <strong>'+esc(M(sent-max))+'</strong></p>';
+    h+='<button type="button" class="btn ghost full" data-a="editRange">'+esc(t('rangeEdit'))+'</button></div>';
+  }
+  h+='<div class="card"><h3>'+esc(t('sendList'))+'</h3>'+sendList(c)+'<button type="button" class="btn full" data-a="addSend">+ '+esc(t('addSend'))+'</button></div>';
   h+='</div><div class="card"><h3>'+esc(t('fcfaTitle'))+'</h3><table><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(sent))+'</td></tr><tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(min))+' – '+esc(fcfa(max))+'</td></tr></table><p class="small muted" style="margin-top:8px">'+esc(t('fcfaNote'))+'</p></div><div class="card"><h3>'+esc(t('suggest'))+'</h3><table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>';
   if(sg.deficit>0)h+='<p class="pill bad" style="margin-top:10px">'+esc(t('deficit'))+' '+esc(M(sg.deficit))+'</p>';
   h+='<button type="button" class="btn ghost full" data-a="useSugg">'+esc(t('useSugg'))+'</button></div>';
@@ -488,7 +506,6 @@ V.send=function(){
   return monthNav()+'<p class="muted">'+esc(t('sendIntro'))+'</p><div id="sum">'+sumSend()+'</div>'+
     '<div class="card"><h3>'+esc(t('fcfaConv'))+'</h3><label class="f" for="est-in">'+esc(t('amount'))+' ('+curSym(S.disp)+')</label><input class="in" id="est-in" inputmode="decimal" placeholder="0"><p class="big" id="est-out" style="font-size:1.5rem;margin:10px 0 0">≈ '+esc(fcfa(0))+'</p></div>'+
     '<div class="card"><h3>'+esc(t('obligL'))+'</h3><p class="muted small">'+esc(t('obligH'))+'</p>'+listEd('oblig')+moneyField('f-var','varPlan',S.varPlan,t('varPlan'))+
-    '<h3 style="margin-top:18px">'+esc(t('yourRange'))+'</h3>'+moneyField('f-min','sendMin',m.sendMin,t('minF'))+moneyField('f-max','sendMax',m.sendMax,t('maxF'))+
     '<h3 style="margin-top:18px">'+esc(t('planL'))+'</h3>'+SENDS.map(function(s){return moneyField('f-p-'+s,'plan_'+s,m.plan[s]||0,t('sl_'+s));}).join('')+'<p class="small muted">'+esc(t('fieldsNote'))+'</p></div>';
 };
 V.more=function(){
@@ -762,6 +779,19 @@ ACT.saveTrip=function(){
 };
 ACT.toggleTrip=function(v){var tgt=S.trips.filter(function(y){return y.id===v;})[0];if(!tgt)return;var on=!tgt.active;if(on)S.trips.forEach(function(x){x.active=false;});tgt.active=on;save();render();};
 ACT.delTrip=function(v){S.trips=S.trips.filter(function(x){return x.id!==v;});S.tx.forEach(function(x){if(x.trip===v){x.trip=null;x.pay='';}});save();render();};
+function rangeForm(){
+  var h='<p class="muted small">'+esc(t('rangeHelp'))+'</p>'+inp('s-rmin','rmin',t('minF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"')+inp('s-rmax','rmax',t('maxF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"');
+  var mn=num(F.rmin),mx=num(F.rmax);
+  if(mx>0)h+='<p class="small muted" style="margin-top:8px">≈ '+esc(fcfa(toEur(mn,S.disp)))+' – '+esc(fcfa(toEur(mx,S.disp)))+'</p>';
+  return h+'<p class="small muted">'+esc(t('rangeCarry'))+'</p>'+btnRow('saveRange','');
+}
+ACT.editRange=function(){var m=mget(VM);F={rmin:m.sendMin?fieldVal(m.sendMin):'',rmax:m.sendMax?fieldVal(m.sendMax):''};openSheet(t('yourRange'),rangeForm);};
+ACT.saveRange=function(){
+  var mn=num(F.rmin),mx=num(F.rmax);
+  if(!(mx>0)||mn<0||mn>mx){toast(t('errRange'),true);return;}
+  var m=mset(VM);m.sendMin=toEur(mn,S.disp);m.sendMax=toEur(mx,S.disp);save();closeSheet();render();toast(t('saved'));
+};
+ACT.addSend=function(){ACT.addTx();F.mode='exp';F.cat='family';F.date=(VM===ym(new Date()))?ymd(new Date()):VM+'-01';redrawSheet();};
 ACT.useSugg=function(){var sg=suggest(VM),m=mset(VM);m.sendMin=sg.min;m.sendMax=sg.max;save();render();};
 ACT.addItem=function(v){S[v].push({id:uid(),name:'',amt:0,cur:'EUR'});save();render();var els=document.querySelectorAll('[data-l="'+v+'"][data-p="name"]');if(els.length)els[els.length-1].focus();};
 ACT.delItem=function(v){var p=v.split(':');S[p[0]]=S[p[0]].filter(function(i){return i.id!==p[1];});save();render();};

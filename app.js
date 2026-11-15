@@ -255,7 +255,7 @@ function rangeBar(sent,min,max){
 function mlabel(k){var p=k.split('-');return new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+p[0],+p[1]-1,1));}
 function monthNav(){
   var p=VM.split('-'),label=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+p[0],+p[1]-1,1));
-  return '<div class="monthnav"><button type="button" class="icon" data-a="prev" aria-label="'+esc(t('prevM'))+'">‹</button><strong>'+esc(label)+'</strong><button type="button" class="icon" data-a="next" aria-label="'+esc(t('nextM'))+'">›</button></div>';
+  return '<div class="monthnav"><button type="button" class="icon" data-a="prev" aria-label="'+esc(t('prevM'))+'">‹</button><button type="button" class="mlabel" data-a="pickM" aria-label="'+esc(t('pickM'))+'">'+esc(label)+' <span aria-hidden="true">▾</span></button><button type="button" class="icon" data-a="next" aria-label="'+esc(t('nextM'))+'">›</button></div>';
 }
 function moneyField(id,field,eur,label){
   return '<label class="f" for="'+id+'">'+esc(label)+' <span class="muted small">('+curSym(S.disp)+')</span></label><input class="in" id="'+id+'" inputmode="decimal" data-f="'+field+'" value="'+esc(fieldVal(eur))+'" placeholder="0">';
@@ -644,6 +644,16 @@ function tripForm(){
 var ACT={};
 ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
 ACT.goMonth=function(v){VM=v;TAB='tx';UI.tf='all';UI.tc='all';render();window.scrollTo(0,0);};
+var PY=0;
+function pickBody(){
+  var cur=ym(new Date()),h='<div class="monthnav"><button type="button" class="icon" data-a="pickY" data-v="-1" aria-label="-1">‹</button><strong>'+PY+'</strong><button type="button" class="icon" data-a="pickY" data-v="1" aria-label="+1">›</button></div><div class="mgrid">';
+  for(var m=1;m<=12;m++){var k=PY+'-'+pad(m),nm=new Intl.DateTimeFormat(loc(),{month:'short'}).format(new Date(PY,m-1,1));
+    h+='<button type="button" class="chip'+(k===VM?' on':'')+(k===cur?' now':'')+'" data-a="pickGo" data-v="'+k+'">'+esc(nm)+'</button>';}
+  return h+'</div>';
+}
+ACT.pickM=function(){PY=+VM.slice(0,4);openSheet(t('pickM'),pickBody);};
+ACT.pickY=function(v){PY+=+v;redrawSheet();};
+ACT.pickGo=function(v){VM=v;UI.sel=null;closeSheet();render();};
 ACT.prev=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1]-2,1));render();};
 ACT.next=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1],1));render();};
 ACT.disp=function(v){S.disp=v;save();render();};

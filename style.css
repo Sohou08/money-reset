@@ -144,3 +144,9 @@ textarea.in{min-height:96px;resize:vertical}
 .irow .ichk .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .irow select.in{grid-column:1/-1;margin-top:6px}
 .irow.dup{opacity:.55}
+
+.mlabel{min-width:160px;text-align:center;text-transform:capitalize;font-family:var(--display);font-weight:700;font-size:inherit;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;min-height:36px}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 12px}
+.mgrid .chip{text-align:center;text-transform:capitalize}
+.mgrid .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mgrid .chip.now:not(.on){border-color:var(--gold)}

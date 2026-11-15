@@ -393,7 +393,7 @@ function yearNav(y){return '<div class="monthnav"><button type="button" class="i
 V.cal=function(){
   var mt=UI.cm||'exp',sc=UI.cs||'m',MT=['exp','inc'].concat(CATS);
   var h='<div class="chips sm" style="margin:2px 0 6px">'+chip('cs','m',sc==='m',esc(t('cmMonth')))+chip('cs','y',sc==='y',esc(t('cmYear')))+'</div>'+
-    '<div class="chips sm" style="margin:0 0 6px">'+MT.map(function(k){return chip('cm',k,mt===k,esc(mlab(k)));}).join('')+'</div>';
+    '<label class="f" for="cm-sel" style="margin-top:0">'+esc(t('cmShow'))+'</label><select class="in" id="cm-sel" data-ui="cm">'+MT.map(function(k){return '<option value="'+k+'"'+(mt===k?' selected':'')+'>'+esc(mlab(k))+'</option>';}).join('')+'</select>';
   if(sc==='y'){
     var y=+VM.slice(0,4),vals=[],tot=0,mx=0;
     for(var m=1;m<=12;m++){var k=y+'-'+pad(m),v=sum(S.tx.filter(function(x){return x.date.slice(0,7)===k;}),function(x){return mval(x,mt);});vals.push(v);tot+=v;if(v>mx)mx=v;}
@@ -590,6 +590,8 @@ V.settings=function(){
     '<div class="card"><h3>'+esc(t('exportCsv'))+'</h3><button type="button" class="btn ghost full" style="margin-top:8px" data-a="csv">'+esc(t('exportCsv'))+'</button>'+(UI.csv?'<textarea class="in" id="csv-out" readonly style="margin-top:10px">'+esc(UI.csv)+'</textarea><button type="button" class="btn full" data-a="copyCsv">'+esc(t('copy'))+'</button>':'')+'</div>'+
     '<div class="card"><h3>'+esc(t('backup'))+'</h3><p class="muted small">'+esc(t('backupHint'))+'</p><textarea class="in" id="bk-out" readonly aria-label="'+esc(t('backup'))+'">'+esc(json)+'</textarea><button type="button" class="btn full" data-a="copyBk">'+esc(t('copy'))+'</button>'+
     '<label class="f" for="bk-in">'+esc(t('restore'))+'</label><textarea class="in" id="bk-in" placeholder="'+esc(t('restorePh'))+'"></textarea><button type="button" class="btn ghost full" data-a="restoreBk">'+esc(t('restore'))+'</button><p class="small" id="bk-msg">'+esc(UI.restoreMsg)+'</p></div>'+
+    '<div class="card"><h3>'+esc(t('privTitle'))+'</h3><p class="muted small">'+esc(t('privShort'))+'</p><button type="button" class="btn ghost full" data-a="privacy">'+esc(t('privOpen'))+'</button></div>'+
+    (cloud()&&AUTH.session?'<div class="card"><h3>'+esc(t('delUserT'))+'</h3><p class="muted small">'+esc(t('delUserP'))+'</p>'+(UI.confirmDelUser?'<p class="small neg"><strong>'+esc(t('delUserSure'))+'</strong></p><div class="btns"><button type="button" class="btn danger" data-a="delUserDo"'+(UI.delBusy?' disabled':'')+'>'+esc(t('delUserYes'))+'</button><button type="button" class="btn ghost" data-a="delUserNo">'+esc(t('delAccCancel'))+'</button></div>':'<button type="button" class="btn ghost full" data-a="delUser">'+esc(t('delUserT'))+'</button>')+(UI.delMsg?'<p class="small neg" role="alert">'+esc(UI.delMsg)+'</p>':'')+'</div>':'')+
     '<div class="card"><button type="button" class="btn '+(UI.confirmReset?'danger':'ghost')+' full" style="margin-top:0" data-a="resetAll">'+esc(UI.confirmReset?t('resetConfirm'):t('reset'))+'</button></div>';
 };
 
@@ -600,7 +602,7 @@ V.gate=function(){
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+
-    '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
+    (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="authGo"'+(AUTH.busy?' disabled':'')+'>'+esc(up?t('signup'):t('signin'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
@@ -886,6 +888,7 @@ ACT.authGo=function(){
   if(AUTH.busy)return;
   var em=($('g-email').value||'').trim(),pw=$('g-pass').value||'';
   if(!em||!pw){AUTH.msg=t('authFill');render();return;}
+  if(AUTH.mode==='up'&&!AUTH.consent){AUTH.msg=t('consentNeed');render();$('g-email').value=em;$('g-pass').value=pw;return;}
   AUTH.busy=true;AUTH.msg='…';render();
   var up=AUTH.mode==='up';
   var p=up?api('/auth/v1/signup',{method:'POST',body:{email:em,password:pw}}):api('/auth/v1/token?grant_type=password',{method:'POST',body:{email:em,password:pw}});
@@ -894,6 +897,22 @@ ACT.authGo=function(){
     setSession(j);AUTH.guest=false;try{localStorage.removeItem('moneyreset.guest');}catch(e){}
     return pull().then(function(){AUTH.busy=false;AUTH.msg='';TAB='home';render();});
   }).catch(function(e){AUTH.busy=false;AUTH.msg=authMsg(e);render();});
+};
+function privBody(){
+  var P=function(k){return '<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pv_'+k+'_t'))+'</h3><p class="small" style="margin:0">'+esc(t('pv_'+k))+'</p>';};
+  return '<p class="small muted" style="margin-top:0">'+esc(t('pvIntro'))+'</p>'+['what','where','who','imp','sec','third','rights','keep'].map(P).join('')+(CFG.contact?'<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pvContactT'))+'</h3><p class="small" style="margin:0">'+esc(CFG.contact)+'</p>':'')+'<p class="small muted" style="margin-top:14px">'+esc(t('pvDate'))+'</p>';
+}
+ACT.privacy=function(){openSheet(t('privTitle'),privBody);};
+ACT.consent=function(){AUTH.consent=!AUTH.consent;AUTH.msg='';var em=($('g-email')||{}).value,pw=($('g-pass')||{}).value;render();if($('g-email'))$('g-email').value=em||'';if($('g-pass'))$('g-pass').value=pw||'';};
+ACT.delUser=function(){UI.confirmDelUser=true;render();};
+ACT.delUserNo=function(){UI.confirmDelUser=false;render();};
+ACT.delUserDo=function(){
+  if(!AUTH.session)return;UI.delBusy=true;UI.delMsg='';render();
+  token().then(function(tk){return api('/rest/v1/rpc/delete_my_account',{method:'POST',body:{}},tk);}).then(function(){
+    clearTimeout(AUTH.timer);AUTH.session=null;authSave();try{localStorage.removeItem(KEY);}catch(e){}
+    var lang=S.lang,disp=S.disp,rates=S.rates;S=blankState(lang,disp,rates);AUTH.sync='';AUTH.guest=false;try{localStorage.removeItem('moneyreset.guest');}catch(e){}
+    UI.confirmDelUser=false;UI.delBusy=false;AUTH.msg=t('delUserDone');TAB='home';render();
+  }).catch(function(){UI.delBusy=false;UI.delMsg=t('delUserErr');render();});
 };
 ACT.logout=function(){
   clearTimeout(AUTH.timer);var go=function(){AUTH.session=null;authSave();try{localStorage.removeItem(KEY);}catch(e){}var lang=S.lang,disp=S.disp,rates=S.rates;S=blankState(lang,disp,rates);AUTH.sync='';TAB='home';render();};
@@ -1092,8 +1111,8 @@ function parseLines(lines){
 function loadPdfJs(){
   if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
   return new Promise(function(ok,ko){
-    var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload=function(){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok(window.pdfjsLib);}catch(e){ko(e);}};
+    var s=document.createElement('script');s.src='vendor/pdf.min.js';
+    s.onload=function(){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';ok(window.pdfjsLib);}catch(e){ko(e);}};
     s.onerror=function(){ko(new Error('pdfjs'));};document.head.appendChild(s);
   });
 }
@@ -1114,7 +1133,7 @@ function toLines(contents){
   return lines;
 }
 function pdfLines(buf){
-  return loadPdfJs().then(function(lib){return lib.getDocument({data:buf}).promise;}).then(function(doc){
+  return loadPdfJs().then(function(lib){return lib.getDocument({data:buf,isEvalSupported:false}).promise;}).then(function(doc){
     var pages=[],p;for(p=1;p<=Math.min(doc.numPages,30);p++)pages.push(doc.getPage(p).then(function(pg){return pg.getTextContent();}));
     return Promise.all(pages);
   }).then(toLines);
@@ -1245,6 +1264,7 @@ document.addEventListener('change',function(e){
     if(r){if(el.getAttribute('data-k')==='on'){r.on=el.checked;redrawSheet();}else{r.cat=el.value;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';redrawSheet();}}
     return;
   }
+  if(el.hasAttribute('data-ui')){UI[el.getAttribute('data-ui')]=el.value;render();return;}
   if(el.hasAttribute('data-ms')&&F){msChange(el);return;}
   if(el.hasAttribute('data-rule')){setRule(el.getAttribute('data-rule'),el.value);return;}
   sheetField(el);applyField(el);

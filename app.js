@@ -597,7 +597,25 @@ function openSheet(title,build){SH={title:title,build:build};var r=$('sheet');r.
 function redrawSheet(){if(!SH)return;var r=$('sheet'),old=r.querySelector('.sheet'),top=old?old.scrollTop:0;r.innerHTML=sheetHtml();var nw=r.querySelector('.sheet');if(nw)nw.scrollTop=top;}
 function closeSheet(){SH=null;F=null;var r=$('sheet');r.className='';r.innerHTML='';}
 function accSelect(field,val,withNone){
+  if(!S.accounts.length)return '<p class="muted small" style="margin:2px 0 6px">'+esc(t('noAccHint'))+'</p><input class="in" id="s-accNew" data-s="accNew" value="'+esc((F&&F.accNew)||'')+'" placeholder="'+esc(t('accNewPh'))+'">';
   return '<select class="in" id="s-'+field+'" data-s="'+field+'">'+(withNone?'<option value="">'+esc(t('noAcc'))+'</option>':'')+S.accounts.map(function(a){return '<option value="'+a.id+'"'+(a.id===val?' selected':'')+'>'+esc(a.name)+' ('+curLabel(a.cur)+')</option>';}).join('')+'</select>';
+}
+function ensureAcc(){
+  if(!F||F.acc||S.accounts.length)return;
+  var n=(F.accNew||'').trim();if(!n)return;
+  var id=uid();S.accounts.push({id:id,name:n,type:'bank',cur:'EUR',open:0,since:ymd(new Date())});F.acc=id;
+}
+function monthSel(field,label,optional){
+  var v=F[field]||'',y=v?+v.slice(0,4):0,m=v?+v.slice(5,7):0,cy=new Date().getFullYear(),ys=[];
+  for(var i=cy-3;i<=cy+10;i++)ys.push(i);
+  var mo=[];for(var k=1;k<=12;k++)mo.push(new Intl.DateTimeFormat(loc(),{month:'long'}).format(new Date(2024,k-1,1)));
+  return '<label class="f">'+esc(label)+'</label><div style="display:grid;grid-template-columns:3fr 2fr;gap:8px"><select class="in" data-ms="'+field+'" data-p="m">'+(optional?'<option value="">—</option>':'')+mo.map(function(n,i){return '<option value="'+(i+1)+'"'+(m===i+1?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select><select class="in" data-ms="'+field+'" data-p="y">'+(optional?'<option value="">—</option>':'')+ys.map(function(n){return '<option value="'+n+'"'+(y===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>';
+}
+function msChange(el){
+  var f=el.getAttribute('data-ms'),p=el.getAttribute('data-p'),v=F[f]||'',y=v?v.slice(0,4):'',m=v?v.slice(5,7):'';
+  if(p==='y')y=el.value;else m=el.value?pad(+el.value):'';
+  if(!y&&!m)F[f]='';else{if(!y)y=String(new Date().getFullYear());if(!m)m='01';F[f]=y+'-'+m;}
+  redrawSheet();
 }
 function inp(id,field,label,ph,extra){return '<label class="f" for="'+id+'">'+esc(label)+'</label><input class="in" id="'+id+'" data-s="'+field+'" value="'+esc(F[field])+'" placeholder="'+esc(ph||'')+'" '+(extra||'')+'>';}
 function btnRow(saveAct,delAct){return '<div class="btns" style="grid-template-columns:'+(delAct?'1fr 1fr':'1fr')+'"><button type="button" class="btn" data-a="'+saveAct+'">'+esc(t('save'))+'</button>'+(delAct?'<button type="button" class="btn ghost" data-a="'+delAct+'">'+esc(t('del'))+'</button>':'')+'</div>';}
@@ -650,7 +668,7 @@ function depForm(){
   return '<p class="muted">'+esc(g?g.name:'')+'</p>'+inp('s-dep','amt',t('amount')+' ('+curSym(g?g.cur:'EUR')+')','0','inputmode="decimal"')+btnRow('saveDep','');
 }
 function recForm(){
-  var h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc'].map(function(m){return sfchip('rtype',m,esc(t('m_'+m)));}).join('')+'</div>'+inp('s-rname','name',t('name'))+inp('s-ramt','amt',t('amount')+' ('+curSym(F.cur)+')','0','inputmode="decimal"')+'<div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+inp('s-rday','day',t('dayOfMonth'),'1','inputmode="numeric"')+'<label class="f" for="s-rfrom">'+esc(t('recFrom'))+'</label><input class="in" id="s-rfrom" type="month" data-f="from" value="'+esc(F.from||'')+'"><label class="f" for="s-rto">'+esc(t('recTo'))+'</label><input class="in" id="s-rto" type="month" data-f="to" value="'+esc(F.to||'')+'">';
+  var h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc'].map(function(m){return sfchip('rtype',m,esc(t('m_'+m)));}).join('')+'</div>'+inp('s-rname','name',t('name'))+inp('s-ramt','amt',t('amount')+' ('+curSym(F.cur)+')','0','inputmode="decimal"')+'<div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+inp('s-rday','day',t('dayOfMonth'),'1','inputmode="numeric"')+monthSel('from',t('recFrom'),false)+monthSel('to',t('recTo'),true)+'';
   if(F.rtype==='exp'){
     h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div>';
     if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>';
@@ -707,7 +725,7 @@ ACT.editTx=function(v){
   openSheet(t('editTx'),txForm);
 };
 ACT.saveTx=function(){
-  var a=num(F.amt);if(a<=0){toast(t('errAmt'),true);return;}
+  ensureAcc();var a=num(F.amt);if(a<=0){toast(t('errAmt'),true);return;}
   if(F.mode==='tr'&&(!F.acc||!F.to||F.acc===F.to)){toast(t('errTr'),true);return;}
   var tr=activeTrip(),useTrip=F.mode==='exp'&&F.trip&&tr,fam=F.mode==='exp'&&F.cat==='family';
   var old=F.id?S.tx.filter(function(y){return y.id===F.id;})[0]:null;
@@ -758,7 +776,7 @@ ACT.saveDep=function(){var a=num(F.amt);if(a<=0){toast(t('errAmt'),true);return;
 ACT.addRec=function(){F={id:null,rtype:'exp',name:'',amt:'',cur:'EUR',day:'1',from:VM,to:'',cat:'needs',sub:'mobile',acc:S.accounts.length?S.accounts[0].id:''};openSheet(t('addRec'),recForm);};
 ACT.editRec=function(v){var r=S.rec.filter(function(x){return x.id===v;})[0];if(!r)return;F={id:r.id,rtype:r.type,name:r.name,amt:numStr(r.amt),cur:r.cur,day:String(r.day),from:r.from||'',to:r.to||'',cat:r.cat||'needs',sub:r.sub||'mobile',acc:r.acc};openSheet(t('editRec'),recForm);};
 ACT.saveRec=function(){
-  var name=F.name.trim(),a=num(F.amt),dd=Math.round(num(F.day));if(!name||a<=0||dd<1||dd>31){toast(t('errRec'),true);return;}
+  ensureAcc();var name=F.name.trim(),a=num(F.amt),dd=Math.round(num(F.day));if(!name||a<=0||dd<1||dd>31){toast(t('errRec'),true);return;}
   var r={id:F.id||uid(),type:F.rtype,name:name,amt:a,cur:F.cur,day:dd,from:/^\d{4}-\d{2}$/.test(F.from||'')?F.from:VM,to:/^\d{4}-\d{2}$/.test(F.to||'')?F.to:'',cat:F.rtype==='exp'?F.cat:'',sub:(F.rtype==='exp'&&F.cat==='family')?F.sub:'',acc:F.acc||''};
   if(r.to&&r.to<r.from){toast(t('errRecPeriod'),true);return;}
   var i=S.rec.map(function(x){return x.id;}).indexOf(r.id);if(i>=0)S.rec[i]=r;else S.rec.push(r);
@@ -1117,7 +1135,7 @@ ACT.impOpen=function(){
   F={step:'pick',rows:[],acc:a?a.id:'',cur:a&&CURS.indexOf(a.cur)>=0?a.cur:S.disp,msg:'',busy:false,src:''};
   openSheet(t('impTitle'),importForm);
 };
-ACT.impGo=function(){
+ACT.impGo=function(){ensureAcc();
   var n=0,L=S.learn=S.learn||{},mc={};
   F.rows.forEach(function(r){
     if(!r.on)return;mc[r.date.slice(0,7)]=(mc[r.date.slice(0,7)]||0)+1;
@@ -1185,6 +1203,7 @@ document.addEventListener('change',function(e){
     if(r){if(el.getAttribute('data-k')==='on'){r.on=el.checked;redrawSheet();}else{r.cat=el.value;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';redrawSheet();}}
     return;
   }
+  if(el.hasAttribute('data-ms')&&F){msChange(el);return;}
   if(el.hasAttribute('data-rule')){setRule(el.getAttribute('data-rule'),el.value);return;}
   sheetField(el);applyField(el);
 });

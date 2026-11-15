@@ -156,3 +156,10 @@ textarea.in{min-height:96px;resize:vertical}
 .howcalc[open] summary::after{content:"▴"}
 .howcalc summary::-webkit-details-marker{display:none}
 .howcalc table td:last-child{text-align:right}
+
+.ygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ygrid button{border:1px solid var(--line);background:var(--card);border-radius:14px;min-height:96px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.85rem;text-transform:capitalize}
+.ygrid button.today{border-color:var(--gold)}
+.ygrid strong{font-size:1.05rem}
+.ybar{width:60%;height:30px;background:var(--soft);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;margin-top:auto}
+.ybar i{display:block;width:100%;background:var(--gold)}

@@ -377,24 +377,50 @@ V.tx=function(){
   });
   return h;
 };
+function mval(x,mt){
+  if(x.status==='pending')return 0;
+  if(mt==='exp')return (x.type==='exp'&&x.cat!=='save'&&x.cat!=='invest')?x.eur:0;
+  if(mt==='inc')return x.type==='inc'?x.eur:0;
+  if(mt==='save'||mt==='invest'){
+    if(x.type==='exp'&&x.cat===mt)return x.eur;
+    if(x.type==='tr'){var a=acc(x.to);if(a&&a.type===(mt==='save'?'savings':'invest'))return x.eur;}
+    return 0;
+  }
+  return (x.type==='exp'&&x.cat===mt)?x.eur:0;
+}
+function mlab(mt){return mt==='exp'?t('cmExp'):(mt==='inc'?t('income'):CEMO[mt]+' '+t('c_'+mt));}
+function yearNav(y){return '<div class="monthnav"><button type="button" class="icon" data-a="yprev" aria-label="-1">‹</button><strong>'+y+'</strong><button type="button" class="icon" data-a="ynext" aria-label="+1">›</button></div>';}
 V.cal=function(){
-  var p=VM.split('-'),y=+p[0],mo=+p[1]-1,n=dim(VM),off=(new Date(y,mo,1).getDay()+6)%7,td=ymd(new Date());
+  var mt=UI.cm||'exp',sc=UI.cs||'m',MT=['exp','inc'].concat(CATS);
+  var h='<div class="chips sm" style="margin:2px 0 6px">'+chip('cs','m',sc==='m',esc(t('cmMonth')))+chip('cs','y',sc==='y',esc(t('cmYear')))+'</div>'+
+    '<div class="chips sm" style="margin:0 0 6px">'+MT.map(function(k){return chip('cm',k,mt===k,esc(mlab(k)));}).join('')+'</div>';
+  if(sc==='y'){
+    var y=+VM.slice(0,4),vals=[],tot=0,mx=0;
+    for(var m=1;m<=12;m++){var k=y+'-'+pad(m),v=sum(S.tx.filter(function(x){return x.date.slice(0,7)===k;}),function(x){return mval(x,mt);});vals.push(v);tot+=v;if(v>mx)mx=v;}
+    h+=yearNav(y)+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('cmTotal'))+' '+y+'</p><p class="val">'+esc(M(tot))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('cmAvg'))+'</p><p class="val">'+esc(M(tot/12))+'</p></div></div>';
+    h+='<div class="card" style="margin-top:12px"><div class="ygrid">'+vals.map(function(v,i){
+      var k=y+'-'+pad(i+1),nm=new Intl.DateTimeFormat(loc(),{month:'short'}).format(new Date(y,i,1));
+      return '<button type="button" data-a="calMonth" data-v="'+k+'" class="'+(k===ym(new Date())?'today':'')+'"><span>'+esc(nm)+'</span><strong>'+(v>0?esc(cmp(v)):'–')+'</strong><span class="ybar"><i style="height:'+(mx>0?(v/mx*100).toFixed(0):0)+'%"></i></span></button>';
+    }).join('')+'</div></div><p class="small muted" style="margin:8px 4px">'+esc(t('cmTapMonth'))+'</p>';
+    return h;
+  }
+  var p=VM.split('-'),yy=+p[0],mo=+p[1]-1,n=dim(VM),off=(new Date(yy,mo,1).getDay()+6)%7,td=ymd(new Date());
   if(!UI.sel||UI.sel.slice(0,7)!==VM)UI.sel=(td.slice(0,7)===VM)?td:VM+'-01';
-  var txs=monthTx(VM),occ=recOcc(VM),spend={},dots={};
-  txs.forEach(function(x){if(x.type==='exp')spend[x.date]=(spend[x.date]||0)+x.eur;if(x.type==='inc')(dots[x.date]=dots[x.date]||{}).g=1;});
+  var txs=monthTx(VM),occ=recOcc(VM),amt={},dots={},mtot=0;
+  txs.forEach(function(x){var v=mval(x,mt);if(v>0){amt[x.date]=(amt[x.date]||0)+v;mtot+=v;}if(x.type==='inc')(dots[x.date]=dots[x.date]||{}).g=1;});
   occ.forEach(function(o){if(!o.done)(dots[o.date]=dots[o.date]||{}).r=1;});
   var liquid=sum(S.accounts.filter(function(a){return LIQ.indexOf(a.type)>=0;}),function(a){return toEur(accBal(a),a.cur);});
   var pend=occ.filter(function(o){return !o.done;}),fc=liquid+sum(pend,function(o){return (o.r.type==='inc'?1:-1)*eurOf(o.r);});
-  var h=monthNav()+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('liquid'))+'</p><p class="val">'+esc(M(liquid))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('forecast'))+'</p><p class="val '+(fc>=0?'':'neg')+'">'+esc(M(fc))+'</p></div></div>';
+  h+=monthNav()+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(mlab(mt))+'</p><p class="val">'+esc(M(mtot))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('forecast'))+'</p><p class="val '+(fc>=0?'':'neg')+'">'+esc(M(fc))+'</p></div></div><p class="small muted" style="margin:6px 4px 0">'+esc(t('liquid'))+' : '+esc(M(liquid))+'</p>';
   var wd=[];for(var i=0;i<7;i++)wd.push(new Intl.DateTimeFormat(loc(),{weekday:'narrow'}).format(new Date(2024,0,1+i)));
   h+='<div class="card" style="margin-top:12px"><div class="cal">'+wd.map(function(w){return '<span class="wd">'+esc(w)+'</span>';}).join('');
   for(var e=0;e<off;e++)h+='<button type="button" class="empty" tabindex="-1" aria-hidden="true"></button>';
   for(var d=1;d<=n;d++){
     var ds=VM+'-'+pad(d),dt=dots[ds]||{};
-    h+='<button type="button" data-a="selDay" data-v="'+ds+'" class="'+(ds===td?'today ':'')+(ds===UI.sel?'sel':'')+'"><span>'+d+'</span><span class="am">'+(spend[ds]?esc(cmp(spend[ds])):'&nbsp;')+'</span><span class="dots">'+(dt.r?'<i></i>':'')+(dt.g?'<i class="g"></i>':'')+'</span></button>';
+    h+='<button type="button" data-a="selDay" data-v="'+ds+'" class="'+(ds===td?'today ':'')+(ds===UI.sel?'sel':'')+'"><span>'+d+'</span><span class="am">'+(amt[ds]?esc(cmp(amt[ds])):'&nbsp;')+'</span><span class="dots">'+(dt.r?'<i></i>':'')+(dt.g?'<i class="g"></i>':'')+'</span></button>';
   }
   h+='</div></div>';
-  var dayTx=txs.filter(function(x){return x.date===UI.sel;}),dayRec=occ.filter(function(o){return o.date===UI.sel&&!o.done;});
+  var dayTx=txs.filter(function(x){return x.date===UI.sel&&mval(x,mt)>0;}),dayRec=occ.filter(function(o){return o.date===UI.sel&&!o.done&&(mt==='exp'?(o.r.type==='exp'&&o.r.cat!=='save'&&o.r.cat!=='invest'):(mt==='inc'?o.r.type==='inc':(o.r.type==='exp'&&o.r.cat===mt)));});
   h+='<div class="day"><span>'+esc(dlong(UI.sel))+'</span></div>';
   h+=(dayTx.length||dayRec.length)?'<div class="card" style="padding:4px 16px">'+dayRec.map(function(o){return recRow(o,'valRec');}).join('')+dayTx.map(function(x){return txRow(x,false);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('none'))+'</p></div>';
   return h;
@@ -715,6 +741,11 @@ ACT.next=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1],1));render();
 ACT.disp=function(v){S.disp=v;save();render();};
 ACT.lang=function(v){S.lang=v;nfCache={};save();render();};
 ACT.per=function(v){UI.per=v;render();};
+ACT.cm=function(v){UI.cm=v;render();};
+ACT.cs=function(v){UI.cs=v;render();};
+ACT.calMonth=function(v){VM=v;UI.cs='m';UI.sel=null;render();window.scrollTo(0,0);};
+ACT.yprev=function(){var p=VM.split('-');VM=ym(new Date(+p[0]-1,+p[1]-1,1));render();};
+ACT.ynext=function(){var p=VM.split('-');VM=ym(new Date(+p[0]+1,+p[1]-1,1));render();};
 ACT.tf=function(v){UI.tf=v;render();};
 ACT.tc=function(v){UI.tc=v;render();};
 ACT.sv=function(v){UI.sv=v;render();window.scrollTo(0,0);};

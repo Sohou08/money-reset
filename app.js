@@ -83,7 +83,15 @@ function fixShape(){
   var b=blankState('fr');Object.keys(b).forEach(function(k){if(S[k]===undefined)S[k]=b[k];});
   if(CURS.indexOf(S.disp)<0)S.disp='EUR';if(S.lang!=='fr'&&S.lang!=='en')S.lang='fr';
   var R=S.rule;if(!R||!(R.n>=0)||!(R.w>=0)||!(R.s>=0)||R.n+R.w+R.s!==100)S.rule={n:50,w:30,s:20};
-  migXof();
+  migXof();migRecFrom();
+}
+function migRecFrom(){
+  var all=S.tx.map(function(x){return x.date.slice(0,7);}).sort()[0]||ym(new Date());
+  S.rec.forEach(function(r){
+    if(r.from)return;
+    var own=S.tx.filter(function(x){return x.recId===r.id;}).map(function(x){return x.date.slice(0,7);}).sort()[0];
+    r.from=own||all;
+  });
 }
 function migXof(){
   var r2=function(v){return Math.round(v/XOF*100)/100;};
@@ -116,7 +124,7 @@ function demo(){
     {id:'r4',type:'exp',name:'Téléphone et internet',amt:35,cur:'EUR',day:12,cat:'needs',sub:'',acc:'a1'},
     {id:'r5',type:'exp',name:'Assurances',amt:45,cur:'EUR',day:15,cat:'needs',sub:'',acc:'a1'},
     {id:'r6',type:'exp',name:'Envoi mensuel famille',amt:150,cur:'EUR',day:10,cat:'family',sub:'mobile',acc:'a1'}];
-  S.rec.forEach(function(r){if(r.day<=day)S.tx.push(mkTx(d(r.day),r.type,r.amt,r.cur,r.cat,r.name,r.acc,{recId:r.id,sub:r.sub}));});
+  S.rec.forEach(function(r){r.from=r.from||ym(new Date());if(r.day<=day)S.tx.push(mkTx(d(r.day),r.type,r.amt,r.cur,r.cat,r.name,r.acc,{recId:r.id,sub:r.sub}));});
   var rows=[[1,'needs',62.4,'Courses'],[3,'wants',28,'Restaurant'],[6,'needs',41.8,'Courses'],[7,'culture',12,'Livre'],[8,'extra',35,'Réparation vélo'],[9,'family',60,'Tontine','other'],[10,'wants',45,'Vêtements'],[11,'family',90,'Envoi LemFi','mobile',0]];
   rows.forEach(function(r){S.tx.push(mkTx(d(r[0]),'exp',r[2],'EUR',r[1],r[3],'a1',{sub:r[4]||'',fee:r[5]||0}));});
   S.tx.push(mkTx(d(3),'tr',100,'EUR','','Épargne du mois','a1',{to:'a2'}));
@@ -172,7 +180,7 @@ function nwSeries(per){
 }
 function monthTx(k){return S.tx.filter(function(x){return x.date.slice(0,7)===k;});}
 function recOcc(k){
-  return S.rec.map(function(r){
+  return S.rec.filter(function(r){return (!r.from||k>=r.from)&&(!r.to||k<=r.to);}).map(function(r){
     var date=k+'-'+pad(Math.min(r.day,dim(k)));
     var done=S.tx.some(function(x){return x.recId===r.id&&x.date.slice(0,7)===k;});
     return {r:r,date:date,done:done};
@@ -195,11 +203,9 @@ function suggest(k){var c=calcM(k);var min=sum(S.oblig,eurOf);var max=Math.max(0
 function activeTrip(){for(var i=0;i<S.trips.length;i++)if(S.trips[i].active)return S.trips[i];return null;}
 function rateDue(){var u=S.rates.updated;return !u||u.slice(0,7)!==ym(new Date());}
 function upcoming(){
-  var now=new Date(),td=ymd(now),k0=ym(now),k1=ym(new Date(now.getFullYear(),now.getMonth()+1,1)),out=[];
-  recOcc(k0).forEach(function(o){if(!o.done&&o.date>=td)out.push(o);});
-  recOcc(k1).forEach(function(o){out.push(o);});
-  out.sort(function(a,b){return a.date<b.date?-1:(a.date>b.date?1:0);});
-  return out.slice(0,5);
+  var out=recOcc(VM).filter(function(o){return !o.done;});
+  out.sort(function(x,y){return x.date<y.date?-1:(x.date>y.date?1:0);});
+  return out.slice(0,8);
 }
 function fv(g,months){var r=Math.pow(1+g.rate/100,1/12)-1,v=g.current;for(var i=0;i<months;i++)v=v*(1+r)+g.monthly;return v;}
 function proj(g){
@@ -489,7 +495,7 @@ V.recurring=function(){
   var occ=recOcc(VM),h='<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px"><p class="muted" style="margin:0">'+esc(t('recIntro'))+'</p><button type="button" class="link" data-a="addRec">+ '+esc(t('addRec'))+'</button></div>';
   if(!S.rec.length)return h+'<div class="card flat"><p class="muted">'+esc(t('noRec'))+'</p></div>';
   h+='<div class="card" style="padding:4px 16px">'+S.rec.map(function(r){var emo=r.type==='inc'?'💰':(CEMO[r.cat]||'🔁');
-    return '<button type="button" class="row" data-a="editRec" data-v="'+r.id+'"><span class="ico">'+emo+'</span><span class="mid"><span class="t">'+esc(r.name)+'</span><span class="muted small">'+esc(t('everyMonth'))+' '+r.day+'</span></span><span class="amt '+(r.type==='inc'?'pos':'')+'">'+(r.type==='inc'?'+':'−')+esc(fmt(r.amt,r.cur))+'</span></button>';}).join('')+'</div>';
+    return '<button type="button" class="row" data-a="editRec" data-v="'+r.id+'"><span class="ico">'+emo+'</span><span class="mid"><span class="t">'+esc(r.name)+'</span><span class="muted small">'+esc(t('everyMonth'))+' '+r.day+(r.from?' · '+esc(t('recSince'))+' '+esc(mlabel(r.from)):'')+(r.to?' → '+esc(mlabel(r.to)):'')+'</span></span><span class="amt '+(r.type==='inc'?'pos':'')+'">'+(r.type==='inc'?'+':'−')+esc(fmt(r.amt,r.cur))+'</span></button>';}).join('')+'</div>';
   return h;
 };
 V.trips=function(){
@@ -623,7 +629,7 @@ function depForm(){
   return '<p class="muted">'+esc(g?g.name:'')+'</p>'+inp('s-dep','amt',t('amount')+' ('+curSym(g?g.cur:'EUR')+')','0','inputmode="decimal"')+btnRow('saveDep','');
 }
 function recForm(){
-  var h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc'].map(function(m){return sfchip('rtype',m,esc(t('m_'+m)));}).join('')+'</div>'+inp('s-rname','name',t('name'))+inp('s-ramt','amt',t('amount')+' ('+curSym(F.cur)+')','0','inputmode="decimal"')+'<div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+inp('s-rday','day',t('dayOfMonth'),'1','inputmode="numeric"');
+  var h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc'].map(function(m){return sfchip('rtype',m,esc(t('m_'+m)));}).join('')+'</div>'+inp('s-rname','name',t('name'))+inp('s-ramt','amt',t('amount')+' ('+curSym(F.cur)+')','0','inputmode="decimal"')+'<div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+inp('s-rday','day',t('dayOfMonth'),'1','inputmode="numeric"')+'<label class="f" for="s-rfrom">'+esc(t('recFrom'))+'</label><input class="in" id="s-rfrom" type="month" data-f="from" value="'+esc(F.from||'')+'"><label class="f" for="s-rto">'+esc(t('recTo'))+'</label><input class="in" id="s-rto" type="month" data-f="to" value="'+esc(F.to||'')+'">';
   if(F.rtype==='exp'){
     h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div>';
     if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>';
@@ -728,11 +734,12 @@ ACT.saveGoal=function(){
 ACT.delGoal=function(){S.goals=S.goals.filter(function(x){return x.id!==F.id;});save();closeSheet();render();};
 ACT.goalAdd=function(v){F={gid:v,amt:''};openSheet(t('deposit'),depForm);};
 ACT.saveDep=function(){var a=num(F.amt);if(a<=0){toast(t('errAmt'),true);return;}S.goals.forEach(function(g){if(g.id===F.gid)g.current+=a;});save();closeSheet();render();toast(t('saved'));};
-ACT.addRec=function(){F={id:null,rtype:'exp',name:'',amt:'',cur:'EUR',day:'1',cat:'needs',sub:'mobile',acc:S.accounts.length?S.accounts[0].id:''};openSheet(t('addRec'),recForm);};
-ACT.editRec=function(v){var r=S.rec.filter(function(x){return x.id===v;})[0];if(!r)return;F={id:r.id,rtype:r.type,name:r.name,amt:numStr(r.amt),cur:r.cur,day:String(r.day),cat:r.cat||'needs',sub:r.sub||'mobile',acc:r.acc};openSheet(t('editRec'),recForm);};
+ACT.addRec=function(){F={id:null,rtype:'exp',name:'',amt:'',cur:'EUR',day:'1',from:VM,to:'',cat:'needs',sub:'mobile',acc:S.accounts.length?S.accounts[0].id:''};openSheet(t('addRec'),recForm);};
+ACT.editRec=function(v){var r=S.rec.filter(function(x){return x.id===v;})[0];if(!r)return;F={id:r.id,rtype:r.type,name:r.name,amt:numStr(r.amt),cur:r.cur,day:String(r.day),from:r.from||'',to:r.to||'',cat:r.cat||'needs',sub:r.sub||'mobile',acc:r.acc};openSheet(t('editRec'),recForm);};
 ACT.saveRec=function(){
   var name=F.name.trim(),a=num(F.amt),dd=Math.round(num(F.day));if(!name||a<=0||dd<1||dd>31){toast(t('errRec'),true);return;}
-  var r={id:F.id||uid(),type:F.rtype,name:name,amt:a,cur:F.cur,day:dd,cat:F.rtype==='exp'?F.cat:'',sub:(F.rtype==='exp'&&F.cat==='family')?F.sub:'',acc:F.acc||''};
+  var r={id:F.id||uid(),type:F.rtype,name:name,amt:a,cur:F.cur,day:dd,from:/^\d{4}-\d{2}$/.test(F.from||'')?F.from:VM,to:/^\d{4}-\d{2}$/.test(F.to||'')?F.to:'',cat:F.rtype==='exp'?F.cat:'',sub:(F.rtype==='exp'&&F.cat==='family')?F.sub:'',acc:F.acc||''};
+  if(r.to&&r.to<r.from){toast(t('errRecPeriod'),true);return;}
   var i=S.rec.map(function(x){return x.id;}).indexOf(r.id);if(i>=0)S.rec[i]=r;else S.rec.push(r);
   save();closeSheet();render();toast(t('saved'));
 };

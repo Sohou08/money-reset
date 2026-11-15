@@ -150,3 +150,9 @@ textarea.in{min-height:96px;resize:vertical}
 .mgrid .chip{text-align:center;text-transform:capitalize}
 .mgrid .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .mgrid .chip.now:not(.on){border-color:var(--gold)}
+
+.howcalc summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.howcalc summary::after{content:"▾";color:var(--muted)}
+.howcalc[open] summary::after{content:"▴"}
+.howcalc summary::-webkit-details-marker{display:none}
+.howcalc table td:last-child{text-align:right}

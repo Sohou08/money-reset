@@ -211,6 +211,15 @@ function upcoming(){
   out.sort(function(p,q){return p.date<q.date?-1:(p.date>q.date?1:0);});
   return out.slice(0,8);
 }
+function nextRec(){
+  var now=new Date(),td=ymd(now);
+  for(var i=0;i<24;i++){
+    var k=ym(new Date(now.getFullYear(),now.getMonth()+i,1)),l=recOcc(k).filter(function(o){return !o.done&&o.date>=td;});
+    l.sort(function(p,q){return p.date<q.date?-1:1;});
+    if(l.length)return l[0];
+  }
+  return null;
+}
 function fv(g,months){var r=Math.pow(1+g.rate/100,1/12)-1,v=g.current;for(var i=0;i<months;i++)v=v*(1+r)+g.monthly;return v;}
 function proj(g){
   var r=Math.pow(1+g.rate/100,1/12)-1,v=g.current,reach=g.current>=g.target?0:null;
@@ -330,7 +339,7 @@ V.home=function(){
   h+='</div>';
   var up=upcoming();
   h+='<h3 class="sec">'+esc(t('upcoming'))+'<button type="button" class="link" data-a="tab" data-v="recurring">'+esc(t('manage'))+'</button></h3>';
-  h+=up.length?'<div class="card">'+up.map(function(u){return u.o?recRow(u.o,'valRec'):txRow(u.x,true);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('noUp'))+'</p></div>';
+  h+=up.length?'<div class="card">'+up.map(function(u){return u.o?recRow(u.o,'valRec'):txRow(u.x,true);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('noUp'))+'</p></div>'+(function(){var n=nextRec();return n?'<div class="card" style="padding:4px 16px"><p class="small muted" style="margin:10px 0 0">'+esc(t('nextRec'))+'</p>'+recRow(n,'valRec')+'</div>':'';})();
   var ss=sendSummary(c);
   h+='<div class="card"><h3>'+esc(t('sendCard'))+'</h3><div class="big" style="font-size:1.6rem">'+M2(c.sent)+'</div>'+(c.m.sendMax>0?rangeBar(c.sent,c.m.sendMin,c.m.sendMax)+'<p class="small muted">'+esc(t('range'))+' '+esc(M(c.m.sendMin))+' – '+esc(M(c.m.sendMax))+' · <span class="pill '+ss.cls+'">'+esc(t('st_'+ss.st))+'</span></p>':'')+'<button type="button" class="btn ghost" data-a="tab" data-v="send">'+esc(t('seeSend'))+'</button></div>';
   return h;

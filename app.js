@@ -616,12 +616,13 @@ function hdrHtml(){
 }
 function barHtml(){
   function nb(k){return '<button type="button" class="nb" data-a="tab" data-v="'+k+'"'+(TAB===k?' aria-current="page"':'')+'><span class="ni" aria-hidden="true">'+NAVEMO[k]+'</span><span class="nl">'+esc(t('nav_'+k))+'</span></button>';}
-  return nb('home')+nb('goals')+nb('tx')+'<button type="button" class="fab" data-a="addMenu" aria-label=""'+esc(t('addTx'))+'">+</button>'+nb('cal')+nb('stats')+nb('send');
+  return nb('home')+nb('goals')+nb('tx')+'<button type="button" class="fab" data-a="addMenu" aria-label="'+esc(t('addTx'))+'">+</button>'+nb('cal')+nb('stats')+nb('send');
 }
 function render(){
   document.documentElement.lang=S.lang;
-  if(needGate()){$('hdr').innerHTML='';$('bar').innerHTML='';$('view').innerHTML=V.gate();return;}
+  if(needGate()){$('hdr').innerHTML='';$('bar').innerHTML='';$('view').setAttribute('data-tab','gate');$('view').innerHTML=V.gate();return;}
   $('hdr').innerHTML=hdrHtml();
+  $('view').setAttribute('data-tab',TAB);
   $('view').innerHTML=banners()+(V[TAB]?V[TAB]():'');
   $('bar').innerHTML=barHtml();
   if(UI.focus){var f=$(UI.focus);if(f)f.focus();UI.focus='';}

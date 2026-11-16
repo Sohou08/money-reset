@@ -47,7 +47,7 @@ p{margin:0 0 8px}
 .seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);font-weight:700}
 .icon{border:1px solid var(--line);background:var(--card);width:38px;height:38px;border-radius:12px;font-size:1.1rem;line-height:1;flex:none}
 
-#bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);align-items:end;padding:6px 4px 8px}
+#bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);align-items:end;padding:6px 4px calc(8px + env(safe-area-inset-bottom))}
 .nb{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;min-width:0;color:var(--muted)}
 .nb .ni{font-size:1.25rem;line-height:1.2;filter:grayscale(1);opacity:.7}
 .nb .nl{font-size:.66rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -168,3 +168,45 @@ textarea.in{min-height:96px;resize:vertical}
 .ygrid strong{font-size:1.05rem}
 .ybar{width:60%;height:30px;background:var(--soft);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;margin-top:auto}
 .ybar i{display:block;width:100%;background:var(--gold)}
+
+/* ---------- Responsive: phone (base) -> tablet (>=768) -> desktop (>=1024) ---------- */
+.fab::after{content:attr(aria-label);display:none}
+@media (min-width:768px){
+  #shell{max-width:none;margin:0;padding-left:88px}
+  #shell:has(#bar:empty){padding-left:0}
+  #hdr{padding:18px 28px 10px}
+  #hdr,#view{max-width:1120px;margin-left:auto;margin-right:auto}
+  #view{padding:6px 28px 48px}
+  #bar{left:0;top:0;bottom:0;transform:none;width:88px;max-width:none;border-top:0;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:4px;padding:20px 8px}
+  #bar:empty{display:none}
+  .nb{padding:10px 2px;border-radius:12px}
+  .nb[aria-current="page"]{background:var(--soft)}
+  .fab{order:-1;margin:0 auto 14px;width:48px;height:48px;border-width:0}
+  #toast{bottom:28px}
+  #sheet.on{display:grid;place-items:center}
+  .sheet{position:relative;left:auto;bottom:auto;transform:none;width:min(560px,92vw);max-height:88vh;border-radius:22px;padding:14px 26px 26px}
+  .grab{display:none}
+  #view[data-tab=gate]{max-width:480px}
+  #view[data-tab=tx],#view[data-tab=cal],#view[data-tab=more],#view[data-tab=settings],#view[data-tab=recurring],#view[data-tab=trips],#view[data-tab=review]{max-width:760px}
+}
+@media (min-width:900px){
+  #view[data-tab=home],#view[data-tab=stats],#view[data-tab=goals],#view[data-tab=send]{column-count:2;column-gap:20px}
+  #view .card,#view .hero,#view .note,#view .tile{break-inside:avoid}
+  #view .sec,#view .monthnav{break-after:avoid;column-span:none}
+  #view[data-tab] > .note:first-child{column-span:all}
+}
+@media (min-width:1024px){
+  #shell{padding-left:232px}
+  #shell:has(#bar:empty){padding-left:0}
+  #bar{width:232px;padding:24px 14px}
+  .nb{flex-direction:row;justify-content:flex-start;gap:12px;padding:11px 14px}
+  .nb .ni{font-size:1.3rem}
+  .nb .nl{font-size:.95rem;max-width:none;overflow:visible}
+  .fab{width:100%;height:48px;border-radius:14px;margin:0 0 14px;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;border-width:0}
+  .fab::after{display:inline}
+  .big{font-size:2.4rem}
+}
+@media (min-width:1500px){
+  #hdr,#view{max-width:1320px}
+  #view[data-tab=home],#view[data-tab=stats]{column-count:3}
+}

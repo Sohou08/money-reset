@@ -590,7 +590,7 @@ V.settings=function(){
     '<div class="card"><h3>'+esc(t('exportCsv'))+'</h3><button type="button" class="btn ghost full" style="margin-top:8px" data-a="csv">'+esc(t('exportCsv'))+'</button>'+(UI.csv?'<textarea class="in" id="csv-out" readonly style="margin-top:10px">'+esc(UI.csv)+'</textarea><button type="button" class="btn full" data-a="copyCsv">'+esc(t('copy'))+'</button>':'')+'</div>'+
     '<div class="card"><h3>'+esc(t('backup'))+'</h3><p class="muted small">'+esc(t('backupHint'))+'</p><textarea class="in" id="bk-out" readonly aria-label="'+esc(t('backup'))+'">'+esc(json)+'</textarea><button type="button" class="btn full" data-a="copyBk">'+esc(t('copy'))+'</button>'+
     '<label class="f" for="bk-in">'+esc(t('restore'))+'</label><textarea class="in" id="bk-in" placeholder="'+esc(t('restorePh'))+'"></textarea><button type="button" class="btn ghost full" data-a="restoreBk">'+esc(t('restore'))+'</button><p class="small" id="bk-msg">'+esc(UI.restoreMsg)+'</p></div>'+
-    '<div class="card"><h3>'+esc(t('privTitle'))+'</h3><p class="muted small">'+esc(t('privShort'))+'</p><button type="button" class="btn ghost full" data-a="privacy">'+esc(t('privOpen'))+'</button></div>'+
+    '<div class="card"><h3>'+esc(t('privTitle'))+'</h3><p class="muted small">'+esc(t('privShort'))+'</p><button type="button" class="btn ghost full" data-a="privacy">'+esc(t('privOpen'))+'</button><button type="button" class="btn ghost full" data-a="legal">'+esc(t('legalOpen'))+'</button></div>'+
     (cloud()&&AUTH.session?'<div class="card"><h3>'+esc(t('delUserT'))+'</h3><p class="muted small">'+esc(t('delUserP'))+'</p>'+(UI.confirmDelUser?'<p class="small neg"><strong>'+esc(t('delUserSure'))+'</strong></p><div class="btns"><button type="button" class="btn danger" data-a="delUserDo"'+(UI.delBusy?' disabled':'')+'>'+esc(t('delUserYes'))+'</button><button type="button" class="btn ghost" data-a="delUserNo">'+esc(t('delAccCancel'))+'</button></div>':'<button type="button" class="btn ghost full" data-a="delUser">'+esc(t('delUserT'))+'</button>')+(UI.delMsg?'<p class="small neg" role="alert">'+esc(UI.delMsg)+'</p>':'')+'</div>':'')+
     '<div class="card"><button type="button" class="btn '+(UI.confirmReset?'danger':'ghost')+' full" style="margin-top:0" data-a="resetAll">'+esc(UI.confirmReset?t('resetConfirm'):t('reset'))+'</button></div>';
 };
@@ -598,11 +598,20 @@ V.settings=function(){
 
 V.gate=function(){
   var up=AUTH.mode==='up';
+  if(AUTH.mode==='forgot')return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('forgotSub'))+'</p>'+
+    '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email" value="'+esc(AUTH.email||'')+'">'+
+    '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
+    '<button type="button" class="btn full" data-a="forgotGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('forgotSend'))+'</button>'+
+    '<button type="button" class="btn ghost full" data-a="authMode" data-v="in">'+esc(t('back'))+'</button></section>';
+  if(AUTH.mode==='reset')return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('newPassSub'))+'</p>'+
+    '<label class="f" for="g-pass">'+esc(t('newPass'))+'</label><input class="in" id="g-pass" type="password" autocomplete="new-password">'+
+    '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
+    '<button type="button" class="btn full" data-a="resetGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('newPassGo'))+'</button></section>';
   return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+
-    (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
+    (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="authMode" data-v="forgot" style="padding:0">'+esc(t('forgot'))+'</button> · <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="authGo"'+(AUTH.busy?' disabled':'')+'>'+esc(up?t('signup'):t('signin'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
@@ -883,6 +892,26 @@ ACT.loadDemo=function(){demo();fixShape();save();TAB='home';render();window.scro
 
 
 ACT.authMode=function(v){AUTH.mode=v;AUTH.msg='';render();};
+ACT.forgotGo=function(){
+  if(AUTH.busy)return;
+  var em=($('g-email').value||'').trim();AUTH.email=em;
+  if(!em){AUTH.msg=t('authFill');render();return;}
+  AUTH.busy=true;AUTH.msg='…';render();
+  var back=encodeURIComponent(location.origin+location.pathname);
+  api('/auth/v1/recover?redirect_to='+back,{method:'POST',body:{email:em}}).then(function(){AUTH.busy=false;AUTH.msg=t('forgotSent');render();})
+    .catch(function(e){AUTH.busy=false;AUTH.msg=(e&&e.status===429)?t('forgotWait'):(e&&e.status===undefined?t('authNet'):t('forgotSent'));render();});
+};
+ACT.resetGo=function(){
+  if(AUTH.busy||!AUTH.recovery)return;
+  var pw=$('g-pass').value||'';
+  if(pw.length<8){AUTH.msg=t('authWeak');render();return;}
+  AUTH.busy=true;AUTH.msg='…';render();
+  api('/auth/v1/user',{method:'PUT',body:{password:pw}},AUTH.recovery.access).then(function(j){
+    setSession({access_token:AUTH.recovery.access,refresh_token:AUTH.recovery.refresh,expires_in:AUTH.recovery.exp,user:j});
+    AUTH.recovery=null;AUTH.guest=false;AUTH.mode='in';
+    return pull().then(function(){AUTH.busy=false;AUTH.msg='';TAB='home';render();toast(t('newPassDone'));});
+  }).catch(function(e){AUTH.busy=false;AUTH.msg=authMsg(e);render();});
+};
 ACT.guest=function(){AUTH.guest=true;try{localStorage.setItem('moneyreset.guest','1');}catch(e){}render();};
 ACT.goAuth=function(){AUTH.guest=false;try{localStorage.removeItem('moneyreset.guest');}catch(e){}AUTH.msg='';render();};
 ACT.authGo=function(){
@@ -904,6 +933,11 @@ function privBody(){
   return '<p class="small muted" style="margin-top:0">'+esc(t('pvIntro'))+'</p>'+['what','where','who','imp','sec','third','rights','keep'].map(P).join('')+(CFG.contact?'<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pvContactT'))+'</h3><p class="small" style="margin:0">'+esc(CFG.contact)+'</p>':'')+'<p class="small muted" style="margin-top:14px">'+esc(t('pvDate'))+'</p>';
 }
 ACT.privacy=function(){openSheet(t('privTitle'),privBody);};
+function legalBody(){
+  var L=function(k,v){return v?'<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t(k))+'</h3><p class="small" style="margin:0">'+esc(v)+'</p>':'';};
+  return L('legalPub',[CFG.publisher,CFG.status].filter(Boolean).join(' · '))+L('legalSiret',CFG.siret)+L('legalAddr',CFG.address)+L('legalContact',CFG.contact)+L('legalHost',t('legalHostTxt'));
+}
+ACT.legal=function(){openSheet(t('legalTitle'),legalBody);};
 ACT.consent=function(){AUTH.consent=!AUTH.consent;AUTH.msg='';var em=($('g-email')||{}).value,pw=($('g-pass')||{}).value;render();if($('g-email'))$('g-email').value=em||'';if($('g-pass'))$('g-pass').value=pw||'';};
 ACT.delUser=function(){UI.confirmDelUser=true;render();};
 ACT.delUserNo=function(){UI.confirmDelUser=false;render();};
@@ -1271,6 +1305,13 @@ document.addEventListener('change',function(e){
   sheetField(el);applyField(el);
 });
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&SH)closeSheet();});
+(function(){
+  var h=(location.hash||'').replace(/^#/,'');if(!h||h.indexOf('type=recovery')<0)return;
+  var q={};h.split('&').forEach(function(p){var i=p.indexOf('=');if(i>0)q[p.slice(0,i)]=decodeURIComponent(p.slice(i+1));});
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  if(q.access_token){AUTH.recovery={access:q.access_token,refresh:q.refresh_token||'',exp:+q.expires_in||3600};AUTH.session=null;authSave();AUTH.guest=false;AUTH.mode='reset';}
+})();
+if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 render();
 if(cloud()&&AUTH.session){pull().then(function(){render();autoRate(false);});}else autoRate(false);
 })();

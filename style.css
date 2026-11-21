@@ -186,7 +186,9 @@ textarea.in{min-height:96px;resize:vertical}
   #sheet.on{display:grid;place-items:center}
   .sheet{position:relative;left:auto;bottom:auto;transform:none;width:min(560px,92vw);max-height:88vh;border-radius:22px;padding:14px 26px 26px}
   .grab{display:none}
-  #view[data-tab=gate]{max-width:480px}
+  #view[data-tab=gate]{max-width:1080px}
+  .gate{min-height:calc(100vh - 80px);display:grid;align-items:center;padding-top:0}
+  .gate-card{margin:0 auto;width:100%;max-width:460px;padding:30px 32px}
   #view[data-tab=tx],#view[data-tab=cal],#view[data-tab=more],#view[data-tab=settings],#view[data-tab=recurring],#view[data-tab=trips],#view[data-tab=review]{max-width:760px}
 }
 @media (min-width:900px){
@@ -209,4 +211,18 @@ textarea.in{min-height:96px;resize:vertical}
 @media (min-width:1500px){
   #hdr,#view{max-width:1320px}
   #view[data-tab=home],#view[data-tab=stats]{column-count:3}
+}
+
+/* Sign-in screen: brand panel + form on tablet landscape and desktop */
+.gate{padding-top:8vh}
+.gate-brand{display:none}
+@media (min-width:900px){
+  .gate{grid-template-columns:1.1fr 1fr;gap:64px}
+  .gate-card{margin:0}
+  .gate-brand{display:block}
+  .gate-logo{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;color:var(--muted);margin-bottom:18px}
+  .gate-brand h2{font-size:clamp(34px,3.6vw,50px);line-height:1.08;margin:0 0 28px}
+  .gate-brand ul{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+  .gate-brand li{display:flex;gap:14px;align-items:flex-start;font-size:17px;line-height:1.4;color:var(--ink)}
+  .gate-brand .gi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:20px}
 }

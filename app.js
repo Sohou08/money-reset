@@ -596,24 +596,28 @@ V.settings=function(){
 };
 
 
-V.gate=function(){
+V.gateCard=function(){
   var up=AUTH.mode==='up';
-  if(AUTH.mode==='forgot')return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('forgotSub'))+'</p>'+
+  if(AUTH.mode==='forgot')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('forgotSub'))+'</p>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email" value="'+esc(AUTH.email||'')+'">'+
     '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="forgotGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('forgotSend'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="authMode" data-v="in">'+esc(t('back'))+'</button></section>';
-  if(AUTH.mode==='reset')return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('newPassSub'))+'</p>'+
+  if(AUTH.mode==='reset')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('newPassSub'))+'</p>'+
     '<label class="f" for="g-pass">'+esc(t('newPass'))+'</label><input class="in" id="g-pass" type="password" autocomplete="new-password">'+
     '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="resetGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('newPassGo'))+'</button></section>';
-  return '<section class="card" style="margin-top:12vh"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
+  return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+
     (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="authMode" data-v="forgot" style="padding:0">'+esc(t('forgot'))+'</button> · <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="authGo"'+(AUTH.busy?' disabled':'')+'>'+esc(up?t('signup'):t('signin'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
+};
+V.gate=function(){
+  return '<div class="gate"><aside class="gate-brand" aria-hidden="false"><div class="gate-logo">MONEY RESET</div><h2>'+esc(t('gateH'))+'</h2><ul>'+
+    ['gateB1','gateB2','gateB3'].map(function(k,n){return '<li><span class="gi" aria-hidden="true">'+['🎯','🌍','🔒'][n]+'</span><span>'+esc(t(k))+'</span></li>';}).join('')+'</ul></aside><div class="gate-main">'+V.gateCard()+'</div></div>';
 };
 
 /* ---------- shell ---------- */

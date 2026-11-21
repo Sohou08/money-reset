@@ -335,9 +335,13 @@ V.home=function(){
   h+='<details class="card howcalc"><summary>'+esc(t('howCalc'))+'</summary><table style="margin-top:10px"><tr><td>'+esc(t('income'))+'</td><td>'+esc(M(c.income))+'</td></tr><tr><td>− '+esc(t('howFixed'))+'</td><td>'+esc(M(c.fixed))+'</td></tr><tr><td>− '+esc(t('savingGoal'))+'</td><td>'+esc(M(c.m.saving))+'</td></tr><tr><td><strong>= '+esc(t('budgetOf'))+'</strong></td><td><strong>'+esc(M(base))+'</strong></td></tr><tr><td>− '+esc(t('howVar'))+'</td><td>'+esc(M(c.variable))+'</td></tr><tr><td><strong>= '+esc(t('left'))+'</strong></td><td><strong>'+esc(M(c.left))+'</strong></td></tr></table><p class="small muted" style="margin-top:8px">'+esc(t('howNote'))+(dlv>0?' '+esc(t('howDay'))+' '+dlv+'.':'')+'</p></details>';
   var envs=SPEND.filter(function(k){return S.env[k]>0;});
   if(envs.length)h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+esc(t('envelopes'))+'</h3><button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></div><p class="small muted" style="margin:4px 0 0">'+esc(t('envHelp'))+'</p>'+envs.map(function(k){var sp=c.by[k],lim=S.env[k],rest=lim-sp;return '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span style="font-weight:700">'+esc(M(lim))+'</span></div>'+bar(lim>0?sp/lim*100:0,sp>lim)+'<p class="small" style="margin:4px 0 0;display:flex;justify-content:space-between"><span class="muted">'+esc(t('envSpent'))+' '+esc(M(sp))+'</span><span class="'+(rest<0?'neg':'pos')+'">'+(rest<0?esc(t('envOver'))+' '+esc(M(-rest)):esc(t('envLeft'))+' '+esc(M(rest)))+'</span></p></div>';}).join('')+'</div>';
-  h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3>';
+  h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3><div class="grid2 catsum" style="margin:8px 0 4px"><button type="button" class="tile tap" data-a="goFlow" data-v="inc"><span class="eyebrow">'+esc(t('income'))+' ›</span><span class="val pos">'+esc(M(c.incAct))+'</span></button><button type="button" class="tile tap" data-a="goFlow" data-v="exp"><span class="eyebrow">'+esc(t('expenses'))+' ›</span><span class="val">'+esc(M(c.spentAll))+'</span></button></div>';
   if(c.spentAll<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
-  else h+=CATS.map(function(k){var v=c.by[k];return '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span>'+esc(M(v))+' <span class="muted small">'+Math.round(v/c.spentAll*100)+' %</span></span></div><div class="bar"><i style="width:'+(v/c.spentAll*100).toFixed(1)+'%;background:'+CCOL[k]+'"></i></div></div>';}).join('');
+  else{
+    h+=CATS.map(function(k){var v=c.by[k],inner='<span class="cl"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span>'+esc(M(v))+' <span class="muted small">'+Math.round(v/c.spentAll*100)+' %</span>'+(v>0?' <span class="muted" aria-hidden="true">›</span>':'')+'</span></span><span class="bar"><i style="width:'+(v/c.spentAll*100).toFixed(1)+'%;background:'+CCOL[k]+'"></i></span>';
+      return v>0?'<button type="button" class="catrow" data-a="goCat" data-v="'+k+'">'+inner+'</button>':'<div class="catrow">'+inner+'</div>';}).join('');
+    h+='<p class="small muted" style="margin:12px 0 0">'+esc(t('catTap'))+'</p>';
+  }
   h+='</div>';
   var up=upcoming();
   h+='<h3 class="sec">'+esc(t('upcoming'))+'<button type="button" class="link" data-a="tab" data-v="recurring">'+esc(t('manage'))+'</button></h3>';
@@ -741,6 +745,8 @@ function tripForm(){
 /* ---------- actions ---------- */
 var ACT={};
 ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
+ACT.goCat=function(k){TAB='tx';UI.tf='exp';UI.tc=k;render();window.scrollTo(0,0);};
+ACT.goFlow=function(f){TAB='tx';UI.tf=f;UI.tc='all';render();window.scrollTo(0,0);};
 ACT.goMonth=function(v){VM=v;TAB='tx';UI.tf='all';UI.tc='all';render();window.scrollTo(0,0);};
 var PY=0;
 function pickBody(){

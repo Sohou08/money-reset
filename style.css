@@ -226,3 +226,11 @@ textarea.in{min-height:96px;resize:vertical}
   .gate-brand li{display:flex;gap:14px;align-items:flex-start;font-size:17px;line-height:1.4;color:var(--ink)}
   .gate-brand .gi{flex:none;width:40px;height:40px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-size:20px}
 }
+
+.tap{cursor:pointer;text-align:left;font:inherit;color:inherit;display:block;width:100%}
+.tap .eyebrow,.tap .val{display:block}
+.catrow{display:block;width:100%;text-align:left;background:transparent;border:0;padding:8px 8px;margin:4px -8px 0;font:inherit;color:inherit;border-radius:10px;box-sizing:content-box}
+button.catrow{cursor:pointer}
+button.catrow:hover,button.catrow:focus-visible{background:var(--soft)}
+.catrow .cl{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}
+.catrow .bar{display:block}

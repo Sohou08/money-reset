@@ -6,6 +6,15 @@ var CATS=SPEND.concat(['save','invest']);
 var CEMO={needs:'🛒',wants:'🍜',culture:'🎭',extra:'⚡',family:'🌍',save:'🐷',invest:'📈',inc:'💰',tr:'🔁'};
 var CCOL={needs:'#3F7D6B',wants:'#D2693E',culture:'#7C6BB5',extra:'#5B7DB1',family:'#C9972B',save:'#4C9AA8',invest:'#8E5BA8'};
 var SENDS=['mobile','bank','cash'],SUBS=['mobile','bank','cash','other'];
+var POSTG={
+  needs:[['g_housing',['rent','charges','mobile','homeIns','energy','internet']],['g_taxes',['taxIncome','taxHab','taxProp','cfe','taxOther']],['g_transport',['car','transit','carIns','fuel','carMaint']],['g_food',['groceries','market']],['g_kids',['canteen','school','supplies','parcel','childcare','bankFees','kidsOther']],['g_health',['doctor','barber','pharmacy','mutual']],['g_justice',['lawyer','alimony','judgment','justOther']]],
+  wants:[['g_fun',['outings','travel','restaurants','gifts','cleaner','events','tobacco','shopping','dryclean','gym','media','hobbies']],['g_pets',['petFood','vet','grooming','petToys']],['g_child2',['famCover','nursery']]],
+  save:[['g_safe',['livretA','ldd','livretJ','csl','livretEp','emergency']],['g_home',['repairs','appliances','checking']]],
+  invest:[['g_invest',['pea','lifeIns','per','rentalInv']]]
+};
+var INCP=['sal1','sal2','rentInc','capital','otherInc'];
+function postList(mode,cat){var o=[];if(mode==='inc')return INCP.slice();(POSTG[cat]||[]).forEach(function(g){o=o.concat(g[1]);});return o;}
+function postOk(mode,cat,p){return p&&postList(mode,cat).indexOf(p)>=0?p:'';}
 var CURS=['EUR','USD'];
 var ATYPES=['bank','card','savings','invest','cash','momo','loan'];
 var AEMO={bank:'🏦',card:'💳',savings:'🐷',invest:'📈',cash:'💵',momo:'📱',loan:'🏠'};
@@ -105,7 +114,7 @@ function migXof(){
 function toEur(a,c){if(c==='EUR')return a;if(c==='XOF')return a/XOF;return a/S.rates.usd;}
 function fromEur(e,c){if(c==='EUR')return e;if(c==='XOF')return e*XOF;return e*S.rates.usd;}
 function mkTx(date,type,amt,cur,cat,note,accId,extra){
-  var x={id:uid(),type:type,date:date,amt:amt,cur:cur,eur:toEur(amt,cur),cat:cat||'',sub:'',note:note||'',fee:0,acc:accId||'',to:'',trip:null,pay:'',status:'done',recId:null};
+  var x={id:uid(),type:type,date:date,amt:amt,cur:cur,eur:toEur(amt,cur),cat:cat||'',sub:'',note:note||'',fee:0,acc:accId||'',to:'',trip:null,pay:'',status:'done',recId:null,post:''};
   if(extra)Object.keys(extra).forEach(function(k){x[k]=extra[k];});return x;
 }
 function demo(){
@@ -124,7 +133,7 @@ function demo(){
     {id:'r4',type:'exp',name:'Téléphone et internet',amt:35,cur:'EUR',day:12,cat:'needs',sub:'',acc:'a1'},
     {id:'r5',type:'exp',name:'Assurances',amt:45,cur:'EUR',day:15,cat:'needs',sub:'',acc:'a1'},
     {id:'r6',type:'exp',name:'Envoi mensuel famille',amt:150,cur:'EUR',day:10,cat:'family',sub:'mobile',acc:'a1'}];
-  S.rec.forEach(function(r){r.from=r.from||ym(new Date());if(r.day<=day)S.tx.push(mkTx(d(r.day),r.type,r.amt,r.cur,r.cat,r.name,r.acc,{recId:r.id,sub:r.sub}));});
+  S.rec.forEach(function(r){r.from=r.from||ym(new Date());if(r.day<=day)S.tx.push(mkTx(d(r.day),r.type,r.amt,r.cur,r.cat,r.name,r.acc,{recId:r.id,sub:r.sub,post:r.post||''}));});
   var rows=[[1,'needs',62.4,'Courses'],[3,'wants',28,'Restaurant'],[6,'needs',41.8,'Courses'],[7,'culture',12,'Livre'],[8,'extra',35,'Réparation vélo'],[9,'family',60,'Tontine','other'],[10,'wants',45,'Vêtements'],[11,'family',90,'Envoi LemFi','mobile',0]];
   rows.forEach(function(r){S.tx.push(mkTx(d(r[0]),'exp',r[2],'EUR',r[1],r[3],'a1',{sub:r[4]||'',fee:r[5]||0}));});
   S.tx.push(mkTx(d(3),'tr',100,'EUR','','Épargne du mois','a1',{to:'a2'}));
@@ -297,7 +306,7 @@ function banners(){
 function txRow(x,showDate){
   var a=acc(x.acc),emo=x.type==='exp'?CEMO[x.cat]||'🛒':CEMO[x.type],title=x.note||(x.type==='exp'?t('c_'+x.cat):t('m_'+x.type));
   var sign=x.type==='exp'?'−':(x.type==='inc'?'+':''),cls=x.type==='inc'?'pos':'';
-  var sub=(showDate?dfmt(x.date)+' · ':'')+(a?esc(a.name):'')+(x.type==='exp'?' · '+esc(t('c_'+x.cat)):'')+(x.sub?' · '+esc(t('sn_'+x.sub)):'')+(x.status==='pending'?' · '+esc(t('pending')):'');
+  var sub=(showDate?dfmt(x.date)+' · ':'')+(a?esc(a.name):'')+(x.type==='exp'?' · '+esc(t('c_'+x.cat)):'')+(x.post?' · '+esc(t('po_'+x.post)):'')+(x.sub?' · '+esc(t('sn_'+x.sub)):'')+(x.status==='pending'?' · '+esc(t('pending')):'');
   return '<button type="button" class="row" data-a="editTx" data-v="'+x.id+'"><span class="ico">'+emo+'</span><span class="mid"><span class="t">'+esc(title)+'</span><span class="muted small">'+sub+'</span></span><span class="amt '+cls+'">'+sign+esc(fmt(x.amt,x.cur))+(x.cur!==S.disp?'<span class="s">'+esc(M(x.eur))+'</span>':'')+'</span></button>';
 }
 function recRow(o,act){
@@ -477,6 +486,23 @@ function repCard(a,title){
   h+='<div style="display:flex;justify-content:space-between;margin-top:14px"><span>'+esc(t('rLeft'))+'</span><strong class="'+(a.inc-a.used>=0?'pos':'neg')+'">'+esc(M(a.inc-a.used))+'</strong></div>';
   return h+'</div>';
 }
+function postCard(c){
+  var inc={},byc={},any=false;
+  c.tx.forEach(function(x){
+    if(x.type==='inc'){var k=x.post||'';inc[k]=(inc[k]||0)+x.eur;if(k)any=true;}
+    else if(x.type==='exp'&&x.cat){var o=byc[x.cat]=byc[x.cat]||{tot:0,p:{}},q=x.post||'';o.tot+=x.eur;o.p[q]=(o.p[q]||0)+x.eur;if(q)any=true;}
+  });
+  var h='<div class="card"><h3>'+esc(t('postDetail'))+'</h3>';
+  if(!any)return h+'<p class="muted small">'+esc(t('postDetailHint'))+'</p></div>';
+  function line(lbl,v,b){return '<div style="display:flex;justify-content:space-between;margin-top:'+(b?10:4)+'px'+(b?';font-weight:700':'')+'"><span'+(b?'':' class="muted"')+'>'+lbl+'</span><span>'+esc(M(v))+'</span></div>';}
+  var ik=Object.keys(inc);
+  if(ik.length){h+='<h4 style="margin:6px 0 0">'+esc(t('incBySrc'))+'</h4>';INCP.concat(['']).forEach(function(k){if(inc[k])h+=line(esc(k?t('po_'+k):t('postOtherLbl')),inc[k],false);});}
+  CATS.forEach(function(cat){var o=byc[cat];if(!o||o.tot<=0)return;
+    h+='<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:6px">'+line(CEMO[cat]+' '+esc(t('c_'+cat)),o.tot,true);
+    postList('exp',cat).concat(['']).sort(function(p,q){return (o.p[q]||0)-(o.p[p]||0);}).forEach(function(k){if(o.p[k])h+=line(esc(k?t('po_'+k):t('postOtherLbl')),o.p[k],false);});
+    h+='</div>';});
+  return h+'</div>';
+}
 function bilanView(){
   var a=r3sum([VM]),c=a.parts[0].c,h=monthNav();
   var base=a.inc,pc=base>0?Math.min(100,a.used/base*100):(a.used>0?100:0),left=a.inc-a.used;
@@ -489,7 +515,7 @@ function bilanView(){
       '<div style="display:flex;justify-content:space-between;margin-top:6px"><span>'+esc(t('expenses'))+'</span><strong>'+esc(M(a.used))+(base>0?' <span class="muted small">'+Math.round(a.used/base*100)+' %</span>':'')+'</strong></div>';
     if(left>0)h+='<p class="small muted" style="margin-top:10px">'+esc(t('splitHint'))+'</p>';
   }
-  h+='</div>'+repCard(a,t('ruleCompare'));
+  h+='</div>'+repCard(a,t('ruleCompare'))+postCard(c);
   if(c.spentAll>0)h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3><div class="donutwrap">'+donut(c.by,c.spentAll)+'<div class="legend" style="flex-direction:column;flex:1;min-width:140px">'+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return '<span><i style="background:'+CCOL[k]+'"></i>'+esc(t('c_'+k))+' · '+esc(M(c.by[k]))+'</span>';}).join('')+'</div></div></div>';
   var top=c.tx.filter(function(x){return x.type==='exp';}).sort(function(x,y){return y.eur-x.eur;}).slice(0,5);
   if(top.length)h+='<div class="card" style="padding:12px 16px"><h3>'+esc(t('topExp'))+'</h3>'+top.map(function(x){return txRow(x,true);}).join('')+'</div>';
@@ -677,13 +703,20 @@ function msChange(el){
 function inp(id,field,label,ph,extra){return '<label class="f" for="'+id+'">'+esc(label)+'</label><input class="in" id="'+id+'" data-s="'+field+'" value="'+esc(F[field])+'" placeholder="'+esc(ph||'')+'" '+(extra||'')+'>';}
 function btnRow(saveAct,delAct){return '<div class="btns" style="grid-template-columns:'+(delAct?'1fr 1fr':'1fr')+'"><button type="button" class="btn" data-a="'+saveAct+'">'+esc(t('save'))+'</button>'+(delAct?'<button type="button" class="btn ghost" data-a="'+delAct+'">'+esc(t('del'))+'</button>':'')+'</div>';}
 
+function postField(mode,cat,val){
+  var L=postList(mode,cat);if(!L.length)return '';
+  var opt=function(k){return '<option value="'+k+'"'+(val===k?' selected':'')+'>'+esc(t('po_'+k))+'</option>';};
+  var body=mode==='inc'?L.map(opt).join(''):(POSTG[cat]||[]).map(function(g){return '<optgroup label="'+esc(t(g[0]))+'">'+g[1].map(opt).join('')+'</optgroup>';}).join('');
+  return '<label class="f" for="s-post">'+esc(t(mode==='inc'?'incSource':'poste'))+'</label><select class="in" id="s-post" data-s="post"><option value="">'+esc(t('posteNone'))+'</option>'+body+'</select>';
+}
 function txForm(){
   var tr=activeTrip(),h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc','tr'].map(function(m){return sfchip('mode',m,esc(t('m_'+m)));}).join('')+'</div>';
   h+='<label class="f" for="s-amt">'+esc(t('amount'))+'</label><input class="in amtbig" id="s-amt" data-s="amt" inputmode="decimal" placeholder="0" value="'+esc(F.amt)+'"><div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>';
   if(F.mode==='exp'){
-    h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div><p class="small muted" style="margin-top:6px">'+esc(t('h_'+F.cat))+'</p>';
+    h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div><p class="small muted" style="margin-top:6px">'+esc(t('h_'+F.cat))+'</p>'+postField('exp',F.cat,F.post);
     if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>'+inp('s-fee','fee',t('feeF')+' ('+curSym(F.cur)+')','0','inputmode="decimal"');
   }
+  if(F.mode==='inc')h+=postField('inc','',F.post);
   if(F.mode==='tr')h+='<label class="f" for="s-acc">'+esc(t('fromAcc'))+'</label>'+accSelect('acc',F.acc,false)+'<label class="f" for="s-to">'+esc(t('toAcc'))+'</label>'+accSelect('to',F.to,false);
   else h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true);
   if(F.mode==='exp'&&tr)h+='<label class="f">'+esc(t('tripFor'))+' '+esc(tr.name)+'</label><div class="chips">'+chip('st','trip',!!F.trip,esc(t('tripToggle')))+'</div>'+(F.trip?'<div class="chips" style="margin-top:8px">'+['cash','card','momo'].map(function(p){return sfchip('pay',p,esc(t('p_'+p)));}).join('')+'</div>':'');
@@ -727,9 +760,9 @@ function depForm(){
 function recForm(){
   var h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc'].map(function(m){return sfchip('rtype',m,esc(t('m_'+m)));}).join('')+'</div>'+inp('s-rname','name',t('name'))+inp('s-ramt','amt',t('amount')+' ('+curSym(F.cur)+')','0','inputmode="decimal"')+'<div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>'+inp('s-rday','day',t('dayOfMonth'),'1','inputmode="numeric"')+monthSel('from',t('recFrom'),false)+monthSel('to',t('recTo'),true)+'';
   if(F.rtype==='exp'){
-    h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div>';
+    h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div>'+postField('exp',F.cat,F.post);
     if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>';
-  }
+  }else h+=postField('inc','',F.post);
   h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true);
   return h+btnRow('saveRec',F.id?'delRec':'');
 }
@@ -775,17 +808,17 @@ ACT.span=function(v){UI.span=+v||1;render();};
 ACT.ruleReset=function(){S.rule={n:50,w:30,s:20};save();render();};
 ACT.selDay=function(v){UI.sel=v;render();};
 ACT.closeSheet=function(){closeSheet();};
-ACT.sf=function(v){var i=v.indexOf(':');F[v.slice(0,i)]=v.slice(i+1);redrawSheet();};
+ACT.sf=function(v){var i=v.indexOf(':'),f=v.slice(0,i);F[f]=v.slice(i+1);if(f==='cat'||f==='mode'||f==='rtype')F.post='';redrawSheet();};
 ACT.st=function(v){F[v]=!F[v];redrawSheet();};
 
 ACT.addTx=function(){
   var a1=S.accounts.length?S.accounts[0].id:'',a2=S.accounts.length>1?S.accounts[1].id:'';
-  F={mode:'exp',amt:'',cur:UI.lastCur,cat:'needs',sub:'mobile',fee:'',note:'',date:ymd(new Date()),acc:a1,to:a2,trip:false,pay:'card',pending:false,id:null,recId:null};
+  F={mode:'exp',post:'',amt:'',cur:UI.lastCur,cat:'needs',sub:'mobile',fee:'',note:'',date:ymd(new Date()),acc:a1,to:a2,trip:false,pay:'card',pending:false,id:null,recId:null};
   openSheet(t('addTx'),txForm);
 };
 ACT.editTx=function(v){
   var x=S.tx.filter(function(y){return y.id===v;})[0];if(!x)return;
-  F={mode:x.type,amt:numStr(x.amt),cur:x.cur,cat:x.cat||'needs',sub:x.sub||'mobile',fee:x.fee?numStr(fromEur(x.fee,x.cur)):'',note:x.note,date:x.date,acc:x.acc,to:x.to||'',trip:!!x.trip,pay:x.pay||'card',pending:x.status==='pending',id:x.id,recId:x.recId};
+  F={mode:x.type,post:x.post||'',amt:numStr(x.amt),cur:x.cur,cat:x.cat||'needs',sub:x.sub||'mobile',fee:x.fee?numStr(fromEur(x.fee,x.cur)):'',note:x.note,date:x.date,acc:x.acc,to:x.to||'',trip:!!x.trip,pay:x.pay||'card',pending:x.status==='pending',id:x.id,recId:x.recId};
   openSheet(t('editTx'),txForm);
 };
 ACT.saveTx=function(){
@@ -793,14 +826,14 @@ ACT.saveTx=function(){
   if(F.mode==='tr'&&(!F.acc||!F.to||F.acc===F.to)){toast(t('errTr'),true);return;}
   var tr=activeTrip(),useTrip=F.mode==='exp'&&F.trip&&tr,fam=F.mode==='exp'&&F.cat==='family';
   var old=F.id?S.tx.filter(function(y){return y.id===F.id;})[0]:null;
-  var x={id:F.id||uid(),type:F.mode,date:F.date||ymd(new Date()),amt:a,cur:F.cur,eur:toEur(a,F.cur),cat:F.mode==='exp'?F.cat:'',sub:fam?F.sub:'',note:F.note.trim(),fee:fam?toEur(num(F.fee),F.cur):0,acc:F.acc||'',to:F.mode==='tr'?F.to:'',trip:useTrip?tr.id:(old&&old.trip&&F.mode==='exp'&&F.trip?old.trip:null),pay:useTrip?F.pay:'',status:F.pending?'pending':'done',recId:F.recId||null};
+  var x={id:F.id||uid(),type:F.mode,date:F.date||ymd(new Date()),amt:a,cur:F.cur,eur:toEur(a,F.cur),cat:F.mode==='exp'?F.cat:'',sub:fam?F.sub:'',note:F.note.trim(),fee:fam?toEur(num(F.fee),F.cur):0,acc:F.acc||'',to:F.mode==='tr'?F.to:'',trip:useTrip?tr.id:(old&&old.trip&&F.mode==='exp'&&F.trip?old.trip:null),pay:useTrip?F.pay:'',status:F.pending?'pending':'done',recId:F.recId||null,post:postOk(F.mode,F.mode==='exp'?F.cat:'',F.post)};
   if(old)S.tx[S.tx.indexOf(old)]=x;else S.tx.push(x);
   UI.lastCur=F.cur;save();closeSheet();render();toast(t('saved'));
 };
 ACT.delTx=function(){S.tx=S.tx.filter(function(x){return x.id!==F.id;});save();closeSheet();render();};
 ACT.valRec=function(v){
   var p=v.split('|'),r=S.rec.filter(function(x){return x.id===p[0];})[0];if(!r)return;
-  S.tx.push(mkTx(p[1],r.type,r.amt,r.cur,r.cat,r.name,r.acc,{sub:r.sub||'',recId:r.id}));save();render();toast(t('validated'));
+  S.tx.push(mkTx(p[1],r.type,r.amt,r.cur,r.cat,r.name,r.acc,{sub:r.sub||'',recId:r.id,post:r.post||''}));save();render();toast(t('validated'));
 };
 ACT.addAcc=function(){F={id:null,name:'',type:'bank',cur:'EUR',open:''};openSheet(t('addAcc'),accForm);};
 ACT.editAcc=function(v){var a=acc(v);if(!a)return;F={id:a.id,name:a.name,type:a.type,cur:a.cur,open:numStr(Math.abs(a.open))};openSheet(t('editAcc'),accForm);};
@@ -837,11 +870,11 @@ ACT.saveGoal=function(){
 ACT.delGoal=function(){S.goals=S.goals.filter(function(x){return x.id!==F.id;});save();closeSheet();render();};
 ACT.goalAdd=function(v){F={gid:v,amt:''};openSheet(t('deposit'),depForm);};
 ACT.saveDep=function(){var a=num(F.amt);if(a<=0){toast(t('errAmt'),true);return;}S.goals.forEach(function(g){if(g.id===F.gid)g.current+=a;});save();closeSheet();render();toast(t('saved'));};
-ACT.addRec=function(){F={id:null,rtype:'exp',name:'',amt:'',cur:'EUR',day:'1',from:VM,to:'',cat:'needs',sub:'mobile',acc:S.accounts.length?S.accounts[0].id:''};openSheet(t('addRec'),recForm);};
-ACT.editRec=function(v){var r=S.rec.filter(function(x){return x.id===v;})[0];if(!r)return;F={id:r.id,rtype:r.type,name:r.name,amt:numStr(r.amt),cur:r.cur,day:String(r.day),from:r.from||'',to:r.to||'',cat:r.cat||'needs',sub:r.sub||'mobile',acc:r.acc};openSheet(t('editRec'),recForm);};
+ACT.addRec=function(){F={id:null,rtype:'exp',post:'',name:'',amt:'',cur:'EUR',day:'1',from:VM,to:'',cat:'needs',sub:'mobile',acc:S.accounts.length?S.accounts[0].id:''};openSheet(t('addRec'),recForm);};
+ACT.editRec=function(v){var r=S.rec.filter(function(x){return x.id===v;})[0];if(!r)return;F={id:r.id,rtype:r.type,post:r.post||'',name:r.name,amt:numStr(r.amt),cur:r.cur,day:String(r.day),from:r.from||'',to:r.to||'',cat:r.cat||'needs',sub:r.sub||'mobile',acc:r.acc};openSheet(t('editRec'),recForm);};
 ACT.saveRec=function(){
   ensureAcc();var name=F.name.trim(),a=num(F.amt),dd=Math.round(num(F.day));if(!name||a<=0||dd<1||dd>31){toast(t('errRec'),true);return;}
-  var r={id:F.id||uid(),type:F.rtype,name:name,amt:a,cur:F.cur,day:dd,from:/^\d{4}-\d{2}$/.test(F.from||'')?F.from:VM,to:/^\d{4}-\d{2}$/.test(F.to||'')?F.to:'',cat:F.rtype==='exp'?F.cat:'',sub:(F.rtype==='exp'&&F.cat==='family')?F.sub:'',acc:F.acc||''};
+  var r={id:F.id||uid(),type:F.rtype,name:name,amt:a,cur:F.cur,day:dd,from:/^\d{4}-\d{2}$/.test(F.from||'')?F.from:VM,to:/^\d{4}-\d{2}$/.test(F.to||'')?F.to:'',cat:F.rtype==='exp'?F.cat:'',sub:(F.rtype==='exp'&&F.cat==='family')?F.sub:'',acc:F.acc||'',post:postOk(F.rtype,F.rtype==='exp'?F.cat:'',F.post)};
   if(r.to&&r.to<r.from){toast(t('errRecPeriod'),true);return;}
   var i=S.rec.map(function(x){return x.id;}).indexOf(r.id);if(i>=0)S.rec[i]=r;else S.rec.push(r);
   save();closeSheet();render();toast(t('saved'));
@@ -879,8 +912,8 @@ ACT.addItem=function(v){S[v].push({id:uid(),name:'',amt:0,cur:'EUR'});save();ren
 ACT.delItem=function(v){var p=v.split(':');S[p[0]]=S[p[0]].filter(function(i){return i.id!==p[1];});save();render();};
 ACT.saveRefl=function(){var el=$('r-text');mset(VM).reflection=el?el.value:'';save();toast(t('reflSaved'));};
 ACT.csv=function(){
-  var rows=['date,type,amount,currency,category,account,note'];
-  S.tx.slice().sort(function(a,b){return a.date<b.date?-1:1;}).forEach(function(x){var a=acc(x.acc);rows.push([x.date,x.type,x.amt,x.cur,x.cat,a?a.name:'','"'+String(x.note).replace(/"/g,'""')+'"'].join(','));});
+  var rows=['date,type,amount,currency,category,item,account,note'];
+  S.tx.slice().sort(function(a,b){return a.date<b.date?-1:1;}).forEach(function(x){var a=acc(x.acc);rows.push([x.date,x.type,x.amt,x.cur,x.cat,x.post||'',a?a.name:'','"'+String(x.note).replace(/"/g,'""')+'"'].join(','));});
   UI.csv=rows.join('\n');render();
 };
 function copyFrom(id){

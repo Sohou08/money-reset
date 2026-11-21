@@ -239,3 +239,5 @@ button.catrow:hover,button.catrow:focus-visible{background:var(--soft)}
 .addpair .btn{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
 .btn.alt{background:var(--card);color:var(--ink);border:2px solid var(--pri)}
 @media (min-width:480px){.addpair{grid-template-columns:1fr 1fr}}
+
+.gate-lang{display:flex;justify-content:flex-end;gap:8px;margin:0 0 10px}

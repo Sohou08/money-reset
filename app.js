@@ -647,7 +647,7 @@ V.gateCard=function(){
 };
 V.gate=function(){
   return '<div class="gate"><aside class="gate-brand" aria-hidden="false"><div class="gate-logo">MONEY RESET</div><h2>'+esc(t('gateH'))+'</h2><ul>'+
-    ['gateB1','gateB2','gateB3'].map(function(k,n){return '<li><span class="gi" aria-hidden="true">'+['🎯','🌍','🔒'][n]+'</span><span>'+esc(t(k))+'</span></li>';}).join('')+'</ul></aside><div class="gate-main">'+V.gateCard()+'</div></div>';
+    ['gateB1','gateB2','gateB3'].map(function(k,n){return '<li><span class="gi" aria-hidden="true">'+['🎯','🌍','🔒'][n]+'</span><span>'+esc(t(k))+'</span></li>';}).join('')+'</ul></aside><div class="gate-main"><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div>'+V.gateCard()+'</div></div>';
 };
 
 /* ---------- shell ---------- */

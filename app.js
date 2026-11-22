@@ -260,6 +260,20 @@ var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
 
 /* ---------- components ---------- */
+
+function MASC(sz,mood){
+  var cheer=mood==='cheer';
+  var eyes=cheer?'<path d="M39 68q7-9 14 0M67 68q7-9 14 0" stroke="#14213D" stroke-width="3.6" fill="none" stroke-linecap="round"/>'
+    :'<ellipse cx="46" cy="68" rx="5" ry="6.5" fill="#14213D"/><ellipse cx="74" cy="68" rx="5" ry="6.5" fill="#14213D"/><circle cx="47.8" cy="65.6" r="1.8" fill="#fff"/><circle cx="75.8" cy="65.6" r="1.8" fill="#fff"/>';
+  var mouth=cheer?'<path d="M47 79q13 17 26 0z" fill="#14213D"/><path d="M52 85q8 6 16 0" fill="#F28C28"/>':'<path d="M48 80q12 12 24 0" stroke="#14213D" stroke-width="3.6" fill="none" stroke-linecap="round"/>';
+  var spark=cheer?'<path d="M14 30l2.2 5.8 5.8 2.2-5.8 2.2L14 46l-2.2-5.8L6 38l5.8-2.2z" fill="#E8B23A"/><path d="M108 70l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" fill="#F28C28"/>':'';
+  return '<svg class="masc" width="'+sz+'" height="'+sz+'" viewBox="0 0 120 120" role="img" aria-label="Xaali" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD76A"/><stop offset="1" stop-color="#E9A21B"/></linearGradient></defs>'+
+  '<ellipse cx="60" cy="112" rx="30" ry="5" fill="#14213D" opacity=".12"/>'+
+  '<circle cx="60" cy="68" r="42" fill="url(#mg)" stroke="#C98A0B" stroke-width="3"/><circle cx="60" cy="68" r="35" fill="none" stroke="#FFF1BF" stroke-width="2" stroke-dasharray="3 4"/>'+
+  '<path d="M19 60C14 8 106 8 101 60C84 50 36 50 19 60z" fill="#14213D"/><path d="M22 53C46 43 74 43 98 53" stroke="#F28C28" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M24 44C48 34 72 34 96 44" stroke="#E8B23A" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M34 30C50 22 70 22 86 30" stroke="#F28C28" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".8"/>'+
+  '<ellipse cx="88" cy="16" rx="11" ry="6.5" transform="rotate(-30 88 16)" fill="#14213D"/><ellipse cx="102" cy="22" rx="10" ry="6" transform="rotate(35 102 22)" fill="#14213D"/><circle cx="94" cy="19" r="5.2" fill="#F28C28"/>'+
+  eyes+'<circle cx="35" cy="80" r="6.5" fill="#F28C28" opacity=".35"/><circle cx="85" cy="80" r="6.5" fill="#F28C28" opacity=".35"/>'+mouth+spark+'</svg>';
+}
 function chip(a,v,on,label,cls){return '<button type="button" class="chip '+(cls||'')+'" data-a="'+a+'" data-v="'+esc(v)+'" aria-pressed="'+(on?'true':'false')+'">'+label+'</button>';}
 function sfchip(field,val,label,cls){return chip('sf',field+':'+val,F[field]===val,label,cls);}
 function bar(p,bad){p=Math.max(0,Math.min(100,p));return '<div class="bar'+(bad?' bad':'')+'"><i style="width:'+p.toFixed(1)+'%"></i></div>';}
@@ -324,7 +338,7 @@ function sendSummary(c){
 function fbCard(){
   if(!cloud())return '';
   var f=UI.fb||(UI.fb={r:0,txt:'',done:false,busy:false});
-  if(f.done)return '<div class="card"><h3>'+esc(t('fbT'))+'</h3><p class="pos">'+esc(t('fbThanks'))+'</p></div>';
+  if(f.done)return '<div class="card"><div class="masc-row">'+MASC(56,'cheer')+'<div><h3>'+esc(t('fbT'))+'</h3><p class="pos" style="margin:0">'+esc(t('fbThanks'))+'</p></div></div></div>';
   return '<div class="card"><h3>'+esc(t('fbT'))+'</h3><p class="muted small" style="margin:0 0 8px">'+esc(t('fbP'))+'</p>'+
     '<div class="chips" role="group" aria-label="'+esc(t('fbRate'))+'">'+[1,2,3,4,5].map(function(n){return '<button type="button" class="chip'+(f.r===n?' on':'')+'" data-a="fbStar" data-v="'+n+'" aria-label="'+n+'/5" aria-pressed="'+(f.r===n)+'">'+(f.r>=n?'★':'☆')+'</button>';}).join('')+'</div>'+
     '<textarea class="in" id="fb-text" maxlength="2000" style="margin-top:10px" placeholder="'+esc(t('fbPh'))+'">'+esc(f.txt)+'</textarea>'+
@@ -334,7 +348,7 @@ V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
   var h='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
     '<div class="chips sm">'+['1m','ytd','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
-  if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)h='<section class="card"><h3>'+esc(t('welcomeT'))+'</h3><p class="muted">'+esc(t('welcomeP'))+'</p><ol class="small" style="padding-left:18px;margin:8px 0"><li>'+esc(t('welcome1'))+'</li><li>'+esc(t('welcome2'))+'</li><li>'+esc(t('welcome3'))+'</li></ol><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button><button type="button" class="btn ghost full" data-a="loadDemo">'+esc(t('welcomeDemo'))+'</button></section>'+h;
+  if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)h='<section class="card"><div class="masc-row">'+MASC(72)+'<p class="bubble">'+esc(t('mascHi'))+'</p></div><h3>'+esc(t('welcomeT'))+'</h3><p class="muted">'+esc(t('welcomeP'))+'</p><ol class="small" style="padding-left:18px;margin:8px 0"><li>'+esc(t('welcome1'))+'</li><li>'+esc(t('welcome2'))+'</li><li>'+esc(t('welcome3'))+'</li></ol><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button><button type="button" class="btn ghost full" data-a="loadDemo">'+esc(t('welcomeDemo'))+'</button></section>'+h;
   if(monthTx(ym(new Date())).length<3)h+='<div class="card"><h3>'+esc(t('impHomeT'))+'</h3><p class="muted small">'+esc(t('impHomeP'))+'</p><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button></div>';
   h+='<h3 class="sec">'+esc(t('accounts'))+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
   if(!S.accounts.length)h+='<div class="card flat"><p class="muted">'+esc(t('noAcc2'))+'</p></div>';
@@ -647,7 +661,7 @@ V.gateCard=function(){
     '<label class="f" for="g-pass">'+esc(t('newPass'))+'</label><input class="in" id="g-pass" type="password" autocomplete="new-password">'+
     '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="resetGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('newPassGo'))+'</button></section>';
-  return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
+  return '<section class="card gate-card"><div class="masc-row">'+MASC(64)+'<h1 style="font-family:var(--display);margin:0">MONEY RESET</h1></div><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+

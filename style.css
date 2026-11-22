@@ -241,3 +241,9 @@ button.catrow:hover,button.catrow:focus-visible{background:var(--soft)}
 @media (min-width:480px){.addpair{grid-template-columns:1fr 1fr}}
 
 .gate-lang{display:flex;justify-content:flex-end;gap:8px;margin:0 0 10px}
+
+.masc{flex:none;display:block}
+.masc-row{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.masc-row h1{font-size:1.25rem}
+.bubble{position:relative;margin:0;background:var(--soft);border-radius:16px;padding:10px 14px;font-weight:600;font-size:.95rem}
+.bubble::before{content:"";position:absolute;left:-7px;top:50%;margin-top:-7px;border:7px solid transparent;border-left:0;border-right-color:var(--soft)}

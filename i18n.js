@@ -332,3 +332,37 @@ simReset:'Back to this month’s figures',
 simVsNow:'compared with today',
 simNote:'The simulation is not saved and has no effect on the other pages.'
 });
+Object.assign(window.I18N.fr,{
+upTop:'Les plus coûteuses',
+upAll:'Voir tout',
+upLess:'Réduire',
+pendingOpt:'Prévue : pas encore passée',
+pendingHelp:'À cocher pour une dépense ou un envoi à venir : il apparaît dans « À prévoir » du calendrier et ne change pas encore vos soldes.',
+obligL:'Charges fixes de ma famille',
+obligH:'Ce que votre famille coûte chaque mois (foyer, scolarité…). Cela sert à calculer le minimum conseillé. Ce ne sont pas des envois : vos envois réels sont dans « Envois du mois ».',
+repTap:'Touchez pour voir le détail',
+repNoDetail:'Aucune dépense détaillée sur cette période.',
+repUnclass:'Beaucoup de dépenses ne sont pas classées. Précisez le poste (loyer, énergie, cantine…) pour un détail plus utile.',
+mascGoals:'Vos grands projets, un pas après l’autre.',
+mascTx:'Toutes vos opérations, à corriger si besoin.',
+mascCal:'Préparez vos prochains prélèvements pour éviter les frais.',
+mascSend:'Envoyez sereinement : on garde un œil sur votre budget.',
+mascSendWarn:'Attention, le budget d’envoi est dépassé.'
+});
+Object.assign(window.I18N.en,{
+upTop:'Biggest ones',
+upAll:'See all',
+upLess:'Show less',
+pendingOpt:'Planned: not happened yet',
+pendingHelp:'Tick for an upcoming expense or send: it shows in the calendar’s “To plan” list and does not change your balances yet.',
+obligL:'My family’s fixed costs',
+obligH:'What your family costs each month (household, school…). Used to compute the suggested minimum. These are not sends: your real sends are in “Sends this month”.',
+repTap:'Tap to see the detail',
+repNoDetail:'No detailed spending for this period.',
+repUnclass:'Many expenses are not classified. Set the item (rent, energy, canteen…) for a more useful breakdown.',
+mascGoals:'Your big projects, one step at a time.',
+mascTx:'All your transactions, to fix if needed.',
+mascCal:'Prepare your next debits to avoid fees.',
+mascSend:'Send with peace of mind: we watch your budget.',
+mascSendWarn:'Careful, the sending budget is exceeded.'
+});

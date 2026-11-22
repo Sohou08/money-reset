@@ -253,3 +253,5 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .note.warn{border-color:var(--orange)}
 .irow .irec{grid-column:1/-1;display:flex;gap:8px;align-items:center;color:var(--muted);margin-top:4px}
 .irow .irec input{width:18px;height:18px}
+.repbtn{display:flex;justify-content:space-between;width:100%;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.repdet{margin:8px 0 4px;padding:8px 12px;background:var(--soft);border-radius:12px}

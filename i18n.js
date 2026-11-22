@@ -580,3 +580,31 @@ repAvg:'average',
 simDetail:'Detail by item',
 simDetailH:'Open a category and change an item (rent, school canteen, groceries…): the result updates. Nothing is saved.'
 });
+Object.assign(window.I18N.fr,{
+suggApplied:'Suggestion appliquée : fourchette et répartition enregistrées pour ce mois',
+suggUsed:'Suggestion appliquée ✓ (la réappliquer)',
+suggNoData:'Pas encore de revenus enregistrés ce mois-ci : importez ou saisissez vos opérations pour obtenir une suggestion.',
+suggMinWhyRec:'Minimum : vos envois récurrents prévus ce mois-ci.',
+suggMinWhyPast:'Minimum : le plus petit de vos envois sur les derniers mois.',
+suggMinWhyNone:'Minimum : pas encore d’historique d’envois (0 pour l’instant).',
+suggMaxWhy:'Maximum : ce qui reste de vos revenus après toutes vos autres dépenses, épargne et investissements :',
+suggSplit:'Répartition proposée du maximum (selon vos habitudes) :'
+});
+Object.assign(window.I18N.en,{
+suggApplied:'Suggestion applied: range and split saved for this month',
+suggUsed:'Suggestion applied ✓ (apply again)',
+suggNoData:'No income recorded this month yet: import or enter your transactions to get a suggestion.',
+suggMinWhyRec:'Minimum: your recurring sends planned this month.',
+suggMinWhyPast:'Minimum: the smallest of your sends over recent months.',
+suggMinWhyNone:'Minimum: no send history yet (0 for now).',
+suggMaxWhy:'Maximum: what is left of your income after all your other spending, savings and investments:',
+suggSplit:'Suggested split of the maximum (based on your habits):'
+});
+Object.assign(window.I18N.fr,{
+suggMin:'Minimum conseillé',
+suggMax:'Maximum possible'
+});
+Object.assign(window.I18N.en,{
+suggMin:'Suggested minimum',
+suggMax:'Maximum possible'
+});

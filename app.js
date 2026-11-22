@@ -219,7 +219,27 @@ function calcM(k){
   var budget=income-fixed-m.saving;
   return {m:m,tx:tx,income:income,fixed:fixed,by:by,variable:variable,spentAll:sum(exps,function(x){return x.eur;}),incAct:sum(tx.filter(function(x){return x.type==='inc';}),function(x){return x.eur;}),sent:sum(sends,function(x){return x.eur;}),types:types,budget:budget,left:budget-variable};
 }
-function suggest(k){var c=calcM(k);var min=sum(S.oblig,eurOf);var max=Math.max(0,c.income-c.fixed-c.m.saving-S.varPlan);return {min:min,max:max,deficit:min>max?min-max:0};}
+function sendTotals(k){var o={tot:0};SENDS.forEach(function(x){o[x]=0;});S.tx.forEach(function(x){if(x.type==='exp'&&x.cat==='family'&&SENDS.indexOf(x.sub)>=0&&x.date.slice(0,7)===k){o[x.sub]+=x.eur;o.tot+=x.eur;}});return o;}
+function suggest(k){
+  var c=calcM(k),d=splitData(c,k),others=d.used-c.sent,base=d.base;
+  var max=Math.max(0,base-others),deficit=(base>0&&others>base)?others-base:0;
+  var rec=sum(recOcc(k).filter(function(o){return o.r.type==='exp'&&o.r.cat==='family';}),function(o){return eurOf(o.r);});
+  var past=[],p=k.split('-'),i,v;
+  for(i=1;i<=6&&past.length<3;i++){v=sendTotals(ym(new Date(+p[0],+p[1]-1-i,1))).tot;if(v>0)past.push(v);}
+  var min=rec>0?rec:(past.length?Math.min.apply(null,past):0);
+  min=Math.min(min,max);
+  return {min:min,max:max,deficit:deficit,base:base,others:others,fromRec:rec>0,hasPast:past.length>0};
+}
+function sendSplit(k,total){
+  var acc0={},t0=0,p=k.split('-'),i,n=0,o;
+  SENDS.forEach(function(x){acc0[x]=0;});
+  for(i=1;i<=6&&n<3;i++){o=sendTotals(ym(new Date(+p[0],+p[1]-1-i,1)));if(o.tot>0){n++;SENDS.forEach(function(x){acc0[x]+=o[x];});t0+=o.tot;}}
+  if(!(t0>0)){o=sendTotals(k);if(o.tot>0){SENDS.forEach(function(x){acc0[x]=o[x];});t0=o.tot;}}
+  var out={};
+  if(!(t0>0)){SENDS.forEach(function(x){out[x]=0;});out.mobile=total;return out;}
+  SENDS.forEach(function(x){out[x]=Math.round(total*acc0[x]/t0*100)/100;});
+  return out;
+}
 function activeTrip(){for(var i=0;i<S.trips.length;i++)if(S.trips[i].active)return S.trips[i];return null;}
 function rateDue(){var u=S.rates.updated;return !u||u.slice(0,7)!==ym(new Date());}
 function upcoming(){
@@ -864,17 +884,24 @@ function sumSend(){
     h+='<button type="button" class="btn ghost full" data-a="editRange">'+esc(t('rangeEdit'))+'</button></div>';
   }
   h+='<div class="card"><h3>'+esc(t('sendList'))+'</h3>'+sendList(c)+'<button type="button" class="btn full" data-a="addSend">+ '+esc(t('addSend'))+'</button></div>';
-  h+='<div class="card"><h3>'+esc(t('suggest'))+'</h3><table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>';
-  if(sg.deficit>0)h+='<p class="pill bad" style="margin-top:10px">'+esc(t('deficit'))+' '+esc(M(sg.deficit))+'</p>';
-  h+='<button type="button" class="btn ghost full" data-a="useSugg">'+esc(t('useSugg'))+'</button></div>';
+  h+='<div class="card"><h3>'+esc(t('suggest'))+'</h3>';
+  if(!(sg.base>0))h+='<p class="muted" style="margin:0">'+esc(t('suggNoData'))+'</p></div>';
+  else{
+    var sp=sendSplit(VM,sg.max);
+    h+='<table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>'+
+      '<p class="small muted" style="margin:8px 0 0">'+esc(t('suggMinWhy'+(sg.fromRec?'Rec':(sg.hasPast?'Past':'None'))))+'</p><p class="small muted" style="margin:4px 0 0">'+esc(t('suggMaxWhy'))+' '+esc(M(sg.base))+' − '+esc(M(sg.others))+'</p>';
+    if(sg.max>0)h+='<p class="small" style="margin:10px 0 4px"><strong>'+esc(t('suggSplit'))+'</strong></p>'+SENDS.filter(function(x){return sp[x]>0;}).map(function(x){return '<p class="small" style="margin:2px 0">'+esc(t('sn_'+x))+' : '+esc(M(sp[x]))+' <span class="muted">· '+esc(fcfa(sp[x]))+'</span></p>';}).join('');
+    if(sg.deficit>0)h+='<p class="pill bad" style="margin-top:10px">'+esc(t('deficit'))+' '+esc(M(sg.deficit))+'</p>';
+    var applied=(m.sendMin===sg.min&&m.sendMax===sg.max);
+    h+='<button type="button" class="btn full" data-a="useSugg" style="margin-top:10px">'+esc(t(applied?'suggUsed':'useSugg'))+'</button></div>';
+  }
   return h;
 }
 V.send=function(){
   var c=calcM(VM),m=c.m;
   return monthNav()+(c.m.sendMax>0&&c.sent>c.m.sendMax?pageMasc('worry','mascSendWarn'):'<p class="muted">'+esc(t('sendIntro'))+'</p>')+'<div id="sum">'+sumSend()+'</div>'+
     '<div class="card"><h3>'+esc(t('fcfaConv'))+'</h3><label class="f" for="est-in">'+esc(t('amount'))+' ('+curSym(S.disp)+')</label><input class="in" id="est-in" inputmode="decimal" placeholder="0"><p class="big" id="est-out" style="font-size:1.5rem;margin:10px 0 0">≈ '+esc(fcfa(0))+'</p><p class="small muted" style="margin:6px 0 0">'+esc(t('fcfaNote'))+'</p>'+
-    '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+
-    '<div class="card"><h3>'+esc(t('obligL'))+'</h3><p class="muted small">'+esc(t('obligH'))+'</p>'+listEd('oblig')+moneyField('f-var','varPlan',S.varPlan,t('varPlan'))+'<p class="small muted">'+esc(t('fieldsNote'))+'</p></div>';
+    '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+'';
 };
 V.more=function(){
   var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['settings','⚙️']];
@@ -1251,7 +1278,7 @@ ACT.saveRange=function(){
   var m=mset(VM);m.sendMin=toEur(mn,S.disp);m.sendMax=toEur(mx,S.disp);save();closeSheet();render();toast(t('saved'));
 };
 ACT.addSend=function(){ACT.addTx();F.mode='exp';F.cat='family';F.date=(VM===ym(new Date()))?ymd(new Date()):VM+'-01';redrawSheet();};
-ACT.useSugg=function(){var sg=suggest(VM),m=mset(VM);m.sendMin=sg.min;m.sendMax=sg.max;save();render();};
+ACT.useSugg=function(){var sg=suggest(VM),m=mset(VM);m.sendMin=sg.min;m.sendMax=sg.max;m.plan=sendSplit(VM,sg.max);save();render();toast(t('suggApplied'));};
 ACT.addItem=function(v){S[v].push({id:uid(),name:'',amt:0,cur:'EUR'});save();render();var els=document.querySelectorAll('[data-l="'+v+'"][data-p="name"]');if(els.length)els[els.length-1].focus();};
 ACT.delItem=function(v){var p=v.split(':');S[p[0]]=S[p[0]].filter(function(i){return i.id!==p[1];});save();render();};
 ACT.saveRefl=function(){var el=$('r-text');mset(VM).reflection=el?el.value:'';save();toast(t('reflSaved'));};

@@ -598,17 +598,19 @@ function ruleEditor(){
 }
 function repDetail(key,a){
   var cats=key==='n'?['needs','extra'].concat(S.sendAlloc==='wants'?[]:['family']):(key==='w'?['wants','culture'].concat(S.sendAlloc==='wants'?['family']:[]):['save','invest']);
-  var tot=0,by={},trs={};
+  var tot=0,plan=0,by={},trs={};
   a.parts.forEach(function(p){p.c.tx.forEach(function(x){
     if(x.type==='exp'&&cats.indexOf(x.cat)>=0){var q=x.cat==='family'?'~family':(x.post||'');by[q]=(by[q]||0)+x.eur;tot+=x.eur;}
     else if(x.type==='tr'&&key==='s'){var ac=acc(x.to);if(ac&&(ac.type==='savings'||ac.type==='invest')){var q2='~tr'+ac.id;trs[q2]=ac.name;by[q2]=(by[q2]||0)+x.eur;tot+=x.eur;}}
-  });});
+  });
+    recOcc(p.k).forEach(function(o){if(o.done||o.r.type!=='exp'||cats.indexOf(o.r.cat)<0)return;var q=o.r.cat==='family'?'~family':(o.r.post||''),e=eurOf(o.r);by[q]=(by[q]||0)+e;tot+=e;plan+=e;});
+  });
   if(tot<=0)return '<p class="small muted" style="margin:8px 0 0">'+esc(t('repNoDetail'))+'</p>';
   var keys=Object.keys(by).sort(function(p,q){return by[q]-by[p];});
   return '<div class="repdet">'+keys.map(function(k){
     var lbl=k===''?t('postOtherLbl'):(k==='~family'?'🌍 '+t('c_family'):(k.indexOf('~tr')===0?'↪ '+trs[k]:t('po_'+k)));
     return '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><span>'+esc(lbl)+'</span><span><strong>'+esc(M(by[k]))+'</strong> <span class="muted small">'+Math.round(by[k]/tot*100)+' %</span></span></div>'+bar(by[k]/tot*100,false);}).join('')+
-    (by['']>tot*0.25?'<p class="small muted" style="margin:8px 0 0">'+esc(t('repUnclass'))+'</p>':'')+'</div>';
+    (plan>0?'<p class="small muted" style="margin:8px 0 0">'+esc(t('repPlanned'))+' '+esc(M(plan))+'</p>':'')+(by['']>tot*0.25?'<p class="small muted" style="margin:8px 0 0">'+esc(t('repUnclass'))+'</p>':'')+'</div>';
 }
 ACT.repOpen=function(v){UI.repOpen=UI.repOpen||{};UI.repOpen[v]=!UI.repOpen[v];render();};
 function repCard(a,title){
@@ -1035,9 +1037,21 @@ ACT.saveTx=function(){
   UI.lastCur=F.cur;if(/^\d{4}-\d{2}/.test(x.date))VM=x.date.slice(0,7);save();closeSheet();render();toast(t('saved'));
 };
 ACT.delTx=function(){S.tx=S.tx.filter(function(x){return x.id!==F.id;});save();closeSheet();render();};
+function recView(){
+  var r=S.rec.filter(function(x){return x.id===F.vr;})[0];if(!r)return '';
+  var a=acc(r.acc);
+  return '<div class="card flat"><p style="margin:0"><strong>'+esc(r.name)+'</strong></p><p class="big" style="font-size:1.5rem;margin:4px 0">'+(r.type==='inc'?'+':'−')+esc(fmt(r.amt,r.cur))+'</p><p class="small muted" style="margin:0">'+esc(dfmt(F.vd))+(a?' · '+esc(a.name):'')+(r.cat?' · '+esc(t('c_'+r.cat)):'')+(r.post?' · '+esc(t('po_'+r.post)):'')+'</p></div>'+
+    '<p class="small muted">'+esc(t('recViewHelp'))+'</p>'+
+    '<div class="btns" style="grid-template-columns:1fr"><button type="button" class="btn" data-a="valRecGo">'+esc(t('recDone'))+'</button><button type="button" class="btn ghost" data-a="editRec" data-v="'+esc(r.id)+'">'+esc(t('recEdit'))+'</button><button type="button" class="btn ghost" data-a="closeSheet">'+esc(t('close'))+'</button></div>';
+}
 ACT.valRec=function(v){
   var p=v.split('|'),r=S.rec.filter(function(x){return x.id===p[0];})[0];if(!r)return;
-  S.tx.push(mkTx(p[1],r.type,r.amt,r.cur,r.cat,r.name,r.acc,{sub:r.sub||'',recId:r.id,post:r.post||''}));save();render();toast(t('validated'));
+  F={vr:r.id,vd:p[1]};openSheet(r.name,recView);
+};
+ACT.valRecGo=function(){
+  if(!F||!F.vr)return;var r=S.rec.filter(function(x){return x.id===F.vr;})[0],d=F.vd;if(!r)return;
+  closeSheet();
+  S.tx.push(mkTx(d,r.type,r.amt,r.cur,r.cat,r.name,r.acc,{sub:r.sub||'',recId:r.id,post:r.post||''}));save();render();toast(t('validated'));
 };
 ACT.addAcc=function(){F={id:null,name:'',type:'bank',cur:'EUR',open:''};openSheet(t('addAcc'),accForm);};
 ACT.editAcc=function(v){var a=acc(v);if(!a)return;F={id:a.id,name:a.name,type:a.type,cur:a.cur,open:numStr(Math.abs(a.open))};openSheet(t('editAcc'),accForm);};

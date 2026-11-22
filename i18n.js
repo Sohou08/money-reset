@@ -366,3 +366,21 @@ mascCal:'Prepare your next debits to avoid fees.',
 mascSend:'Send with peace of mind: we watch your budget.',
 mascSendWarn:'Careful, the sending budget is exceeded.'
 });
+Object.assign(window.I18N.fr,{
+diTop:'Catégorie où vous dépensez le plus',
+postDetail:'Détail de vos dépenses par catégorie',
+recViewHelp:'Cette opération reste dans « À venir » tant que vous ne l’enregistrez pas. L’enregistrer l’ajoute à vos opérations et met à jour vos soldes et votre patrimoine.',
+recDone:'C’est passé : l’enregistrer',
+recEdit:'Modifier ce prélèvement',
+close:'Fermer',
+repPlanned:'Dont prévu (pas encore passé) :'
+});
+Object.assign(window.I18N.en,{
+diTop:'Category where you spend the most',
+postDetail:'Spending detail by category',
+recViewHelp:'This stays in “Upcoming” until you record it. Recording it adds it to your transactions and updates your balances and net worth.',
+recDone:'It happened: record it',
+recEdit:'Edit this debit',
+close:'Close',
+repPlanned:'Of which planned (not happened yet):'
+});

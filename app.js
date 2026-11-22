@@ -148,7 +148,7 @@ function demo(){
   S.months[cur]={saving:200,sendMin:240,sendMax:420,plan:{mobile:300,bank:100,cash:0},reflection:''};
 }
 S=load();
-if(!S)S=blankState(guessLang(),'EUR');
+if(!S){var gl=guessLang();S=blankState(gl,gl==='en'?'USD':'EUR');}
 fixShape();
 try{var k0='__t';localStorage.setItem(k0,'1');localStorage.removeItem(k0);}catch(e0){memOnly=true;}
 
@@ -1201,7 +1201,7 @@ ACT.goNow=function(){VM=ym(new Date());render();};
 ACT.prev=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1]-2,1));render();};
 ACT.next=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1],1));render();};
 ACT.disp=function(v){S.disp=v;save();render();};
-ACT.lang=function(v){S.lang=v;nfCache={};save();render();};
+ACT.lang=function(v){S.lang=v;if(needGate()||!S.objDone)S.disp=(v==='en'?'USD':'EUR');nfCache={};save();render();};
 ACT.per=function(v){UI.per=v;render();};
 ACT.cm=function(v){UI.cm=v;render();};
 ACT.cs=function(v){UI.cs=v;render();};

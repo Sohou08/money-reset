@@ -12,12 +12,6 @@
   --body:"DM Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#0B1426; --card:#111D36; --ink:#EAF0FB; --muted:#9FB0CC; --line:#223152; --soft:#17233F;
-    --pri:#E8B23A; --pri-ink:#0B1426; --gold:#E8B23A; --orange:#F5A04A; --good:#4CC995; --bad:#F0806E; --warn:#EDB154; color-scheme:dark;
-  }
-}
 :root[data-theme="dark"]{
   --bg:#0B1426; --card:#111D36; --ink:#EAF0FB; --muted:#9FB0CC; --line:#223152; --soft:#17233F;
     --pri:#E8B23A; --pri-ink:#0B1426; --gold:#E8B23A; --orange:#F5A04A; --good:#4CC995; --bad:#F0806E; --warn:#EDB154; color-scheme:dark;

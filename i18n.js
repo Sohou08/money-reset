@@ -402,3 +402,11 @@ recOpt:'Recurring expense (every month)',
 recIncOpt:'Recurring income (every month)',
 recOptHelp:'Tick if it comes back every month: it will show in “Upcoming” and in the calendar for the following months.'
 });
+Object.assign(window.I18N.fr,{
+recSeen:'Déjà vu les mois précédents : coché récurrent. Décochez si ce n’est pas le cas.',
+recOptHelp:'Cochez si elle revient chaque mois (y compris un versement d’épargne ou d’investissement) : elle apparaîtra dans « À venir » et dans le calendrier. L’appli la repère aussi toute seule quand elle l’a déjà vue.'
+});
+Object.assign(window.I18N.en,{
+recSeen:'Seen in previous months: ticked as recurring. Untick if that is not the case.',
+recOptHelp:'Tick if it comes back every month (including a savings or investment deposit): it will show in “Upcoming” and in the calendar. The app also spots it on its own once it has seen it before.'
+});

@@ -432,3 +432,11 @@ monthOnly:'I only know the month',
 periodHelp:'Every transaction belongs to a month and a year. The day is optional: tap “I only know the month” if you do not know it.',
 dateF:'Date (month, year and day)'
 });
+Object.assign(window.I18N.fr,{
+noOpsMonth:'Aucune opération ce mois-là',
+noOpsHelp:'Rien n’est encore enregistré pour ce mois : ajoutez une opération ou importez un relevé de ce mois pour voir ce qu’il vous reste.'
+});
+Object.assign(window.I18N.en,{
+noOpsMonth:'No transactions this month',
+noOpsHelp:'Nothing is recorded for this month yet: add a transaction or import a statement for it to see what is left.'
+});

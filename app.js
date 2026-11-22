@@ -321,6 +321,15 @@ function sendSummary(c){
   var st=(max<=0&&min<=0)?'none':(sent<min?'below':(sent>max?'above':'in'));
   return {st:st,cls:{none:'warn',below:'warn',in:'good',above:'bad'}[st]};
 }
+function fbCard(){
+  if(!cloud())return '';
+  var f=UI.fb||(UI.fb={r:0,txt:'',done:false,busy:false});
+  if(f.done)return '<div class="card"><h3>'+esc(t('fbT'))+'</h3><p class="pos">'+esc(t('fbThanks'))+'</p></div>';
+  return '<div class="card"><h3>'+esc(t('fbT'))+'</h3><p class="muted small" style="margin:0 0 8px">'+esc(t('fbP'))+'</p>'+
+    '<div class="chips" role="group" aria-label="'+esc(t('fbRate'))+'">'+[1,2,3,4,5].map(function(n){return '<button type="button" class="chip'+(f.r===n?' on':'')+'" data-a="fbStar" data-v="'+n+'" aria-label="'+n+'/5" aria-pressed="'+(f.r===n)+'">'+(f.r>=n?'★':'☆')+'</button>';}).join('')+'</div>'+
+    '<textarea class="in" id="fb-text" maxlength="2000" style="margin-top:10px" placeholder="'+esc(t('fbPh'))+'">'+esc(f.txt)+'</textarea>'+
+    '<button type="button" class="btn full" data-a="fbSend"'+(f.busy?' disabled':'')+'>'+esc(t('fbSend'))+'</button></div>';
+}
 V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
   var h='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
@@ -357,6 +366,7 @@ V.home=function(){
   h+=up.length?'<div class="card">'+up.map(function(u){return u.o?recRow(u.o,'valRec'):txRow(u.x,true);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('noUp'))+'</p></div>'+(function(){var n=nextRec();return n?'<div class="card" style="padding:4px 16px"><p class="small muted" style="margin:10px 0 0">'+esc(t('nextRec'))+'</p>'+recRow(n,'valRec')+'</div>':'';})();
   var ss=sendSummary(c);
   h+='<div class="card"><h3>'+esc(t('sendCard'))+'</h3><div class="big" style="font-size:1.6rem">'+M2(c.sent)+'</div>'+(c.m.sendMax>0?rangeBar(c.sent,c.m.sendMin,c.m.sendMax)+'<p class="small muted">'+esc(t('range'))+' '+esc(M(c.m.sendMin))+' – '+esc(M(c.m.sendMax))+' · <span class="pill '+ss.cls+'">'+esc(t('st_'+ss.st))+'</span></p>':'')+'<button type="button" class="btn ghost" data-a="tab" data-v="send">'+esc(t('seeSend'))+'</button></div>';
+  h+=fbCard();
   return h;
 };
 V.goals=function(){
@@ -780,6 +790,15 @@ var ACT={};
 ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
 ACT.goCat=function(k){TAB='tx';UI.tf='exp';UI.tc=k;render();window.scrollTo(0,0);};
 ACT.goFlow=function(f){TAB='tx';UI.tf=f;UI.tc='all';render();window.scrollTo(0,0);};
+ACT.fbStar=function(v){var f=UI.fb||(UI.fb={r:0,txt:'',done:false,busy:false}),ta=$('fb-text');if(ta)f.txt=ta.value;f.r=(f.r===+v)?0:+v;render();};
+ACT.fbSend=function(){
+  var f=UI.fb||(UI.fb={r:0,txt:'',done:false,busy:false}),ta=$('fb-text');if(ta)f.txt=ta.value;
+  var msg=f.txt.trim().slice(0,2000);if(!f.r&&!msg){toast(t('fbEmpty'),true);return;}
+  if(f.busy)return;f.busy=true;
+  var body={rating:f.r||null,message:msg||null,lang:S.lang==='en'?'en':'fr'};
+  var go=function(tk){return api('/rest/v1/mr_feedback',{method:'POST',prefer:'return=minimal',body:body},tk);};
+  (AUTH.session?token().then(go,function(){return go();}):go()).then(function(){f.done=true;f.busy=false;render();},function(){f.busy=false;render();toast(t('fbErr'),true);});
+};
 ACT.goMonth=function(v){VM=v;TAB='tx';UI.tf='all';UI.tc='all';render();window.scrollTo(0,0);};
 var PY=0;
 function pickBody(){

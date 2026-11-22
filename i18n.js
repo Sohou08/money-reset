@@ -608,3 +608,29 @@ Object.assign(window.I18N.en,{
 suggMin:'Suggested minimum',
 suggMax:'Maximum possible'
 });
+Object.assign(window.I18N.fr,{
+suggMode_new:'Basé sur vos envois habituels ({typ}), avec 10 % de marge, sans jamais dépasser ce que vous pouvez vous permettre ({afford}).',
+suggMode_room:'Votre budget d’envoi est de {max} maximum et il vous reste {left} en fin de mois : vous pouvez ajouter jusqu’à {extra} de plus. Je garde la moitié de ce qui reste en sécurité.',
+suggMode_over:'Vous avez déjà dépassé votre maximum de {max} (de {over}). Même s’il vous reste {left}, gardez-le : n’envoyez plus rien ce mois-ci au-delà de votre fourchette.',
+suggMode_tight:'Votre budget d’envoi est respecté et il ne reste rien à ajouter ce mois-ci : gardez votre fourchette.',
+suggMode_deficit:'Vos dépenses dépassent déjà vos revenus de {def}. Ne rajoutez rien : l’envoi conseillé ne dépasse pas {sug}.',
+suggRemain:'Encore possible d’envoyer ce mois-ci :',
+suggCeil:'Plafond absolu (tout ce qui reste de vos revenus) :',
+suggMax:'Maximum conseillé'
+});
+Object.assign(window.I18N.en,{
+suggMode_new:'Based on your usual sends ({typ}), with a 10 % margin, never above what you can afford ({afford}).',
+suggMode_room:'Your sending budget is {max} maximum and you have {left} left at month end: you can add up to {extra} more. I keep half of what is left as a safety margin.',
+suggMode_over:'You are already above your {max} maximum (by {over}). Even though {left} is left, keep it: do not send anything beyond your range this month.',
+suggMode_tight:'Your sending budget is respected and there is nothing left to add this month: keep your range.',
+suggMode_deficit:'Your spending already exceeds your income by {def}. Add nothing: the suggested sending does not exceed {sug}.',
+suggRemain:'Still possible to send this month:',
+suggCeil:'Absolute ceiling (everything left of your income):',
+suggMax:'Suggested maximum'
+});
+Object.assign(window.I18N.fr,{
+suggMode_toohigh:'Votre maximum de {max} est plus haut que ce que vous pouvez vous permettre ({afford}). Je vous conseille de le ramener à {sug}.'
+});
+Object.assign(window.I18N.en,{
+suggMode_toohigh:'Your {max} maximum is higher than what you can afford ({afford}). I suggest bringing it down to {sug}.'
+});

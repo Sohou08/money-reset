@@ -221,14 +221,22 @@ function calcM(k){
 }
 function sendTotals(k){var o={tot:0};SENDS.forEach(function(x){o[x]=0;});S.tx.forEach(function(x){if(x.type==='exp'&&x.cat==='family'&&SENDS.indexOf(x.sub)>=0&&x.date.slice(0,7)===k){o[x.sub]+=x.eur;o.tot+=x.eur;}});return o;}
 function suggest(k){
-  var c=calcM(k),d=splitData(c,k),others=d.used-c.sent,base=d.base;
-  var max=Math.max(0,base-others),deficit=(base>0&&others>base)?others-base:0;
+  var c=calcM(k),d=splitData(c,k),m=c.m,base=d.base,left=d.left,sent=c.sent,afford=Math.max(0,sent+left);
   var rec=sum(recOcc(k).filter(function(o){return o.r.type==='exp'&&o.r.cat==='family';}),function(o){return eurOf(o.r);});
   var past=[],p=k.split('-'),i,v;
   for(i=1;i<=6&&past.length<3;i++){v=sendTotals(ym(new Date(+p[0],+p[1]-1-i,1))).tot;if(v>0)past.push(v);}
-  var min=rec>0?rec:(past.length?Math.min.apply(null,past):0);
-  min=Math.min(min,max);
-  return {min:min,max:max,deficit:deficit,base:base,others:others,fromRec:rec>0,hasPast:past.length>0};
+  var typical=past.length?sum(past,function(x){return x;})/past.length:sent;
+  var hasR=m.sendMax>0,mode,sMax,extra=0;
+  if(left<0){mode='deficit';sMax=hasR?Math.min(m.sendMax,afford):afford;}
+  else if(!hasR){mode='new';sMax=Math.min(afford,typical>0?typical*1.1:base*0.15);}
+  else if(sent>m.sendMax){mode='over';sMax=m.sendMax;}
+  else if(m.sendMax>afford){mode='toohigh';sMax=afford;}
+  else if(left>0){mode='room';extra=Math.min(left/2,m.sendMax*0.25);sMax=Math.min(afford,m.sendMax+extra);}
+  else{mode='tight';sMax=m.sendMax;}
+  sMax=Math.max(0,Math.floor(sMax/5)*5);
+  var sMin=hasR?m.sendMin:(rec>0?rec:(past.length?Math.min.apply(null,past):0));
+  sMin=Math.min(sMin,sMax);
+  return {min:sMin,max:sMax,mode:mode,base:base,left:left,sent:sent,afford:afford,extra:extra,typical:typical,remain:Math.max(0,sMax-sent),deficit:left<0?-left:0,curMax:m.sendMax||0,hasPast:past.length>0,fromRec:rec>0};
 }
 function sendSplit(k,total){
   var acc0={},t0=0,p=k.split('-'),i,n=0,o;
@@ -887,11 +895,12 @@ function sumSend(){
   h+='<div class="card"><h3>'+esc(t('suggest'))+'</h3>';
   if(!(sg.base>0))h+='<p class="muted" style="margin:0">'+esc(t('suggNoData'))+'</p></div>';
   else{
-    var sp=sendSplit(VM,sg.max);
+    var sp=sendSplit(VM,sg.max),rp=function(str,o){Object.keys(o).forEach(function(q){str=str.split('{'+q+'}').join(o[q]);});return str;};
     h+='<table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>'+
-      '<p class="small muted" style="margin:8px 0 0">'+esc(t('suggMinWhy'+(sg.fromRec?'Rec':(sg.hasPast?'Past':'None'))))+'</p><p class="small muted" style="margin:4px 0 0">'+esc(t('suggMaxWhy'))+' '+esc(M(sg.base))+' − '+esc(M(sg.others))+'</p>';
+      '<p class="small" style="margin:10px 0 0">'+esc(rp(t('suggMode_'+sg.mode),{left:M(sg.left),extra:M(sg.extra),max:M(sg.curMax),sent:M(sg.sent),typ:M(sg.typical),afford:M(sg.afford),sug:M(sg.max),def:M(sg.deficit),over:M(sg.sent-sg.curMax)}))+'</p>'+
+      (sg.remain>0?'<p class="small" style="margin:6px 0 0">'+esc(t('suggRemain'))+' <strong>'+esc(M(sg.remain))+'</strong> <span class="muted">· '+esc(fcfa(sg.remain))+'</span></p>':'')+
+      '<p class="small muted" style="margin:6px 0 0">'+esc(t('suggCeil'))+' '+esc(M(sg.afford))+'</p>';
     if(sg.max>0)h+='<p class="small" style="margin:10px 0 4px"><strong>'+esc(t('suggSplit'))+'</strong></p>'+SENDS.filter(function(x){return sp[x]>0;}).map(function(x){return '<p class="small" style="margin:2px 0">'+esc(t('sn_'+x))+' : '+esc(M(sp[x]))+' <span class="muted">· '+esc(fcfa(sp[x]))+'</span></p>';}).join('');
-    if(sg.deficit>0)h+='<p class="pill bad" style="margin-top:10px">'+esc(t('deficit'))+' '+esc(M(sg.deficit))+'</p>';
     var applied=(m.sendMin===sg.min&&m.sendMax===sg.max);
     h+='<button type="button" class="btn full" data-a="useSugg" style="margin-top:10px">'+esc(t(applied?'suggUsed':'useSugg'))+'</button></div>';
   }

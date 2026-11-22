@@ -1228,7 +1228,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&(e
 /* ---------- import: CSV / PDF / invoice ---------- */
 function norm(s){return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();}
 var RULES=[
-  ['family',/sendwave|lemfi|worldremit|western ?union|moneygram|remitly|orange ?money|\bwave\b|taptap|ria money|\bwise\b|transfert international|dakar|senegal/,'mobile'],
+  ['family',/sendwave|send wave|lemfi|lem fi|worldremit|world remit|western ?union|moneygram|money gram|remitly|orange ?money|\bwave\b|taptap|tap tap send|ria money|\bwise\b|small ?world|paysend|joni ?joni|\bwari\b|xoom|azimo|remitbee|nala money|afriex|transfert international|international transfer|dakar|senegal|\bsn\b/,'mobile'],
   ['invest',/trade ?republic|degiro|bitstack|binance|coinbase|\betf\b|\bpea\b|assurance[ -]?vie|bourse|crypto|yomoni|linxea|\bscpi\b/],
   ['save',/livret|livjeun|epargne|savings|\bpel\b|\bldds\b|\blep\b/],
   ['needs',/loyer|\brent\b|\bedf\b|engie|totalenergies|enedis|veolia|\borange\b|\bsfr\b|bouygues|\bfree\b|assurance|maif|macif|\baxa\b|navigo|ratp|sncf|\buber\b|\bbolt\b|carrefour|leclerc|auchan|lidl|\baldi\b|monoprix|franprix|intermarche|picard|pharmacie|mutuelle|impot|dgfip|cpam|essence|carburant|parking|sanef|vinci|credit immobilier|electricite|\bgaz\b|internet|doctolib|medecin|ecole|creche|cantine|groceries|supermarket|council tax|electric|insurance|tesco|sainsbury|walmart|kroger|station (total|service|essence)|total access|\besso\b|\bshell\b/],
@@ -1303,7 +1303,7 @@ function guessRow0(label,sign,extra){
   if(sign<=0&&WD_RE.test(n))return {cat:'withdraw',sub:'',known:true};
   if(k&&L[k])return {cat:L[k],sub:L[k]==='family'?'mobile':'',known:true,remit:L[k]==='family'};
   if(sign>=0&&INC_RE.test(n))return {cat:'inc',sub:'',known:true};
-  for(var i=0;i<RULES.length;i++){if(RULES[i][1].test(n)){var amb=RULES[i][0]==='family'&&/orange ?money/.test(n)&&!/sendwave|lemfi|remitly|worldremit|western ?union|moneygram|taptap|ria money/.test(n);return {cat:RULES[i][0],sub:RULES[i][2]||'',known:!amb,remit:RULES[i][0]==='family'};}}
+  for(var i=0;i<RULES.length;i++){if(RULES[i][1].test(n)){var amb=RULES[i][0]==='family'&&/orange ?money/.test(n)&&!/sendwave|send wave|lemfi|lem fi|remitly|worldremit|world remit|western ?union|moneygram|taptap|ria money|small ?world|paysend|joni ?joni/.test(n);return {cat:RULES[i][0],sub:RULES[i][2]||'',known:!amb,remit:RULES[i][0]==='family'};}}
   return sign>0?{cat:'inc',sub:'',known:true}:{cat:'needs',sub:'',known:false};
 }
 function parseAmt(s){
@@ -1513,6 +1513,8 @@ function findBalance(lines){
 }
 var REC_RE=/loyer|\brent\b|abonnement|subscription|netflix|spotify|disney|canal\+?|prime video|\bedf\b|engie|totalenergies|enedis|internet|\bfree\b|\bsfr\b|bouygues|orange(?! ?money)|assurance|mutuelle|navigo|credit|\bpret\b|emprunt|salaire|salary|payroll|basic ?fit|cotisation|impot|dgfip|mensualite|insurance|electric/;
 var REC_INV=/versement programme|virement permanent|trade ?republic|bitstack|\bpea\b|assurance[ -]?vie|livret|epargne programmee|\bscpi\b|yomoni|linxea/;
+var ESS_RE=/loyer|\brent\b|\bedf\b|engie|totalenergies|enedis|electricite|\bgaz\b|veolia|\beau\b|internet|fibre|livebox|freebox|free mobile|sosh|forfait|orange|\bsfr\b|bouygues|assurance|maif|macif|mutuelle|credit|\bpret\b|impot|dgfip|cantine|creche|syndic|copropriete|navigo/;
+var REC_EXPL=/virement permanent|versement programme|prelevement mensuel|abonnement mensuel|echeance/;
 function histRec(label,amt,date,inc){
   var k=keyOf(label);if(!k||!(amt>0))return false;
   if(S.rec.some(function(x){return keyOf(x.name)===k&&x.type===(inc?'inc':'exp');}))return true;
@@ -1527,7 +1529,8 @@ function recGuess(rows){
     var k=keyOf(r.lk||r.label),n=norm(r.label),ms=0;if(k&&cnt[k]){var ml=Object.keys(cnt[k]);ms=ml.some(function(m){return m!==r.date.slice(0,7)&&Math.abs(cnt[k][m]-r.amt)/Math.max(r.amt,0.01)<0.15;})?2:1;}
     var hist=!!k&&(S.rec.some(function(x){return keyOf(x.name)===k;})||S.tx.some(function(x){return x.date.slice(0,7)!==r.date.slice(0,7)&&keyOf(x.note)===k&&r.amt>0&&Math.abs(x.amt-r.amt)/r.amt<0.15;}));
     var LR=S.learnRec||{};
-    r.rec=r.cat==='withdraw'?false:(k&&LR[k]!==undefined?!!LR[k]:!!(REC_RE.test(n)||((r.cat==='save'||r.cat==='invest')&&REC_INV.test(n))||ms>1||hist));
+    var first=(r.cat==='inc'&&/salaire|\bpaie\b|payroll|salary/.test(n))||(r.cat==='needs'&&ESS_RE.test(n))||(r.cat==='family'&&r.known)||REC_EXPL.test(n);
+    r.rec=r.cat==='withdraw'?false:(k&&LR[k]!==undefined?!!LR[k]:!!(first||ms>1||hist));
   });
 }
 function buildRow(r){

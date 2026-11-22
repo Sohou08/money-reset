@@ -410,3 +410,9 @@ Object.assign(window.I18N.en,{
 recSeen:'Seen in previous months: ticked as recurring. Untick if that is not the case.',
 recOptHelp:'Tick if it comes back every month (including a savings or investment deposit): it will show in “Upcoming” and in the calendar. The app also spots it on its own once it has seen it before.'
 });
+Object.assign(window.I18N.fr,{
+backNow:'Revenir au mois en cours'
+});
+Object.assign(window.I18N.en,{
+backNow:'Back to the current month'
+});

@@ -442,7 +442,8 @@ V.home=function(){
     if(tot>0)h+='<div class="card"><h3>'+esc(t('alloc'))+'</h3><div class="stack">'+Object.keys(by).map(function(k){return '<i style="width:'+(by[k]/tot*100).toFixed(1)+'%;background:'+ACOL[k]+'"></i>';}).join('')+'</div><div class="legend">'+Object.keys(by).map(function(k){return '<span><i style="background:'+ACOL[k]+'"></i>'+esc(t('at_'+k))+' '+Math.round(by[k]/tot*100)+' %</span>';}).join('')+'</div>'+(debts>0?'<p class="small neg" style="margin-top:8px">'+esc(t('debts'))+' : '+esc(M(debts))+'</p>':'')+'</div>';
   }
   var c=calcM(VM),over=c.left<0,base=c.income-c.fixed-c.m.saving;
-  h+='<h3 class="sec">'+esc(t('thisMonth'))+'<button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></h3>'+monthNav();
+  var curM=VM===ym(new Date()),vp=VM.split('-');
+  h+='<h3 class="sec">'+esc(curM?t('thisMonth'):new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+vp[0],+vp[1]-1,1)))+'<button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></h3>'+monthNav()+(curM?'':'<p style="margin:-2px 0 10px"><button type="button" class="link" data-a="goNow">↩ '+esc(t('backNow'))+'</button></p>');
   h+='<section class="hero'+(over?' over':'')+'"><p class="eyebrow">'+esc(over?t('over'):t('left'))+'</p><div class="big">'+M2(Math.abs(c.left))+'</div>'+(base>0?bar(c.variable/base*100):'')+'<p class="eyebrow">'+esc(t('income'))+' '+esc(M(c.income))+' · '+esc(t('expenses'))+' '+esc(M(c.spentAll))+'</p>';
   if(VM===ym(new Date())&&c.left>0){var dl=dim(VM)-new Date().getDate()+1;if(dl>0)h+='<p class="eyebrow" style="margin-top:6px">≈ '+esc(M(c.left/dl))+' '+esc(t('perDay'))+'</p>';}
   h+='</section>'+objCard(VM);
@@ -975,7 +976,7 @@ function tripForm(){
 
 /* ---------- actions ---------- */
 
-ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
+ACT.tab=function(v){if(v==='home')VM=ym(new Date());TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
 ACT.goCat=function(k){TAB='tx';UI.tf='exp';UI.tc=k;render();window.scrollTo(0,0);};
 ACT.goFlow=function(f){TAB='tx';UI.tf=f;UI.tc='all';render();window.scrollTo(0,0);};
 ACT.fbStar=function(v){var f=UI.fb||(UI.fb={r:0,txt:'',done:false,busy:false}),ta=$('fb-text');if(ta)f.txt=ta.value;f.r=(f.r===+v)?0:+v;render();};
@@ -998,6 +999,7 @@ function pickBody(){
 ACT.pickM=function(){PY=+VM.slice(0,4);openSheet(t('pickM'),pickBody);};
 ACT.pickY=function(v){PY+=+v;redrawSheet();};
 ACT.pickGo=function(v){VM=v;UI.sel=null;closeSheet();render();};
+ACT.goNow=function(){VM=ym(new Date());render();};
 ACT.prev=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1]-2,1));render();};
 ACT.next=function(){var p=VM.split('-');VM=ym(new Date(+p[0],+p[1],1));render();};
 ACT.disp=function(v){S.disp=v;save();render();};
@@ -1520,9 +1522,9 @@ function histRec(label,amt,date,inc){
 }
 function recGuess(rows){
   var cnt={};
-  rows.forEach(function(r){var k=keyOf(r.lk||r.label);if(!k)return;(cnt[k]=cnt[k]||{})[r.date.slice(0,7)]=1;});
+  rows.forEach(function(r){var k=keyOf(r.lk||r.label);if(!k)return;(cnt[k]=cnt[k]||{})[r.date.slice(0,7)]=r.amt;});
   rows.forEach(function(r){
-    var k=keyOf(r.lk||r.label),n=norm(r.label),ms=k&&cnt[k]?Object.keys(cnt[k]).length:0;
+    var k=keyOf(r.lk||r.label),n=norm(r.label),ms=0;if(k&&cnt[k]){var ml=Object.keys(cnt[k]);ms=ml.some(function(m){return m!==r.date.slice(0,7)&&Math.abs(cnt[k][m]-r.amt)/Math.max(r.amt,0.01)<0.15;})?2:1;}
     var hist=!!k&&(S.rec.some(function(x){return keyOf(x.name)===k;})||S.tx.some(function(x){return x.date.slice(0,7)!==r.date.slice(0,7)&&keyOf(x.note)===k&&r.amt>0&&Math.abs(x.amt-r.amt)/r.amt<0.15;}));
     var LR=S.learnRec||{};
     r.rec=r.cat==='withdraw'?false:(k&&LR[k]!==undefined?!!LR[k]:!!(REC_RE.test(n)||((r.cat==='save'||r.cat==='invest')&&REC_INV.test(n))||ms>1||hist));

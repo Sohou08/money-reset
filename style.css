@@ -257,3 +257,5 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .repdet{margin:8px 0 4px;padding:8px 12px;background:var(--soft);border-radius:12px}
 
 .mblock{break-inside:avoid;display:block}
+
+.cal .dots i.e{background:#e07b00;border-radius:2px}

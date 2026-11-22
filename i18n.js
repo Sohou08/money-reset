@@ -512,3 +512,71 @@ planGap:'Short by',
 planGapH:'Push a date back, lower a target or cut some spending.',
 planAllOk:'All your projects are covered, you would still have'
 });
+Object.assign(window.I18N.fr,{
+impMonths:'Chaque opération est rangée dans son mois :',
+impFiles:'relevés',
+impFilesBad:'illisible(s)'
+});
+Object.assign(window.I18N.en,{
+impMonths:'Each transaction is filed under its own month:',
+impFiles:'statements',
+impFilesBad:'unreadable'
+});
+Object.assign(window.I18N.fr,{
+addEvt:'Ajouter un rappel ce jour',
+evtName:'Nom (ex. Prélèvement assurance)',
+evtAmt:'Montant (facultatif)',
+evtKind:'Type',
+ek_debit:'Prélèvement',
+ek_buy:'Achat',
+ek_other:'Autre',
+evtRep:'Se répète chaque mois',
+evtRepShort:'chaque mois',
+evtHelp:'Vous serez rappelé 2 jours avant, 1 jour avant et le jour même.',
+evtHelpShort:'rappel J-2 et J-1',
+evtErr:'Indiquez un nom pour ce rappel.',
+today:'aujourd’hui',
+tomorrow:'demain',
+inNDays:'dans {n} jours',
+notifBtn:'Activer les notifications du navigateur',
+notifHelp:'Elles s’affichent à l’ouverture de l’appli. Un rappel quand l’appli est fermée demandera un serveur (bientôt).',
+notifOk:'Notifications activées',
+notifNo:'Notifications non disponibles ou refusées'
+});
+Object.assign(window.I18N.en,{
+addEvt:'Add a reminder on this day',
+evtName:'Name (e.g. Insurance debit)',
+evtAmt:'Amount (optional)',
+evtKind:'Type',
+ek_debit:'Debit',
+ek_buy:'Purchase',
+ek_other:'Other',
+evtRep:'Repeats every month',
+evtRepShort:'monthly',
+evtHelp:'You will be reminded 2 days before, 1 day before and on the day.',
+evtHelpShort:'reminder D-2 and D-1',
+evtErr:'Enter a name for this reminder.',
+today:'today',
+tomorrow:'tomorrow',
+inNDays:'in {n} days',
+notifBtn:'Enable browser notifications',
+notifHelp:'They show when the app is opened. Reminders while the app is closed will need a server (soon).',
+notifOk:'Notifications enabled',
+notifNo:'Notifications unavailable or denied'
+});
+Object.assign(window.I18N.fr,{
+span12:'1 an',
+repOp:'opération',
+repOps:'opérations',
+repAvg:'moyenne',
+simDetail:'Détail par poste',
+simDetailH:'Ouvrez une catégorie et changez un poste (loyer, cantine, courses…) : le résultat se met à jour. Rien n’est enregistré.'
+});
+Object.assign(window.I18N.en,{
+span12:'1 yr',
+repOp:'transaction',
+repOps:'transactions',
+repAvg:'average',
+simDetail:'Detail by item',
+simDetailH:'Open a category and change an item (rent, school canteen, groceries…): the result updates. Nothing is saved.'
+});

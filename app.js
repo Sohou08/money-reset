@@ -918,6 +918,7 @@ function txForm(){
   else h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true);
   if(F.mode==='exp'&&tr)h+='<label class="f">'+esc(t('tripFor'))+' '+esc(tr.name)+'</label><div class="chips">'+chip('st','trip',!!F.trip,esc(t('tripToggle')))+'</div>'+(F.trip?'<div class="chips" style="margin-top:8px">'+['cash','card','momo'].map(function(p){return sfchip('pay',p,esc(t('p_'+p)));}).join('')+'</div>':'');
   h+=inp('s-note','note',t('noteF'))+inp('s-date','date',t('dateF'),'','type="date"');
+  if(!F.id&&F.mode!=='tr')h+='<div class="chips" style="margin-top:12px">'+chip('st','rec',!!F.rec,'🔁 '+esc(t(F.mode==='inc'?'recIncOpt':'recOpt')))+'</div><p class="small muted" style="margin:6px 0 0">'+esc(t('recOptHelp'))+'</p>';
   if(F.pending||(F.date&&F.date>ymd(new Date())))h+='<div class="chips" style="margin-top:12px">'+chip('st','pending',!!F.pending,esc(t('pendingOpt')))+'</div><p class="small muted" style="margin:6px 0 0">'+esc(t('pendingHelp'))+'</p>';
   return h+btnRow('saveTx',F.id?'delTx':'');
 }
@@ -1019,7 +1020,7 @@ ACT.st=function(v){F[v]=!F[v];redrawSheet();};
 
 ACT.addTx=function(){
   var a1=S.accounts.length?S.accounts[0].id:'',a2=S.accounts.length>1?S.accounts[1].id:'';
-  F={mode:'exp',post:'',amt:'',cur:UI.lastCur,cat:'needs',sub:'mobile',fee:'',note:'',date:ymd(new Date()),acc:a1,to:a2,trip:false,pay:'card',pending:false,id:null,recId:null};
+  F={mode:'exp',post:'',amt:'',cur:UI.lastCur,cat:'needs',sub:'mobile',fee:'',note:'',date:ymd(new Date()),acc:a1,to:a2,trip:false,pay:'card',pending:false,rec:false,id:null,recId:null};
   openSheet(t('addTx'),txForm);
 };
 ACT.editTx=function(v){
@@ -1033,6 +1034,11 @@ ACT.saveTx=function(){
   var tr=activeTrip(),useTrip=F.mode==='exp'&&F.trip&&tr,fam=F.mode==='exp'&&F.cat==='family';
   var old=F.id?S.tx.filter(function(y){return y.id===F.id;})[0]:null;
   var x={id:F.id||uid(),type:F.mode,date:F.date||ymd(new Date()),amt:a,cur:F.cur,eur:toEur(a,F.cur),cat:F.mode==='exp'?F.cat:'',sub:fam?F.sub:'',note:F.note.trim(),fee:fam?toEur(num(F.fee),F.cur):0,acc:F.acc||'',to:F.mode==='tr'?F.to:'',trip:useTrip?tr.id:(old&&old.trip&&F.mode==='exp'&&F.trip?old.trip:null),pay:useTrip?F.pay:'',status:F.pending?'pending':'done',recId:F.recId||null,post:postOk(F.mode,F.mode==='exp'?F.cat:'',F.post)};
+  if(!old&&F.rec&&F.mode!=='tr'){
+    var rid=uid(),dd=+String(x.date).slice(8,10)||1,rm=String(x.date).slice(0,7);
+    S.rec.push({id:rid,type:x.type,name:x.note||(x.type==='inc'?t('m_inc'):t('c_'+x.cat)),amt:a,cur:F.cur,day:dd,from:rm,to:'',cat:x.cat,sub:x.sub,acc:x.acc,post:x.post});
+    x.recId=rid;
+  }
   if(old)S.tx[S.tx.indexOf(old)]=x;else S.tx.push(x);
   UI.lastCur=F.cur;if(/^\d{4}-\d{2}/.test(x.date))VM=x.date.slice(0,7);save();closeSheet();render();toast(t('saved'));
 };

@@ -392,3 +392,13 @@ Object.assign(window.I18N.en,{
 wdCat:'Cash withdrawal',
 wdNote:'Goes to your “Cash” account (internal transfer, not an expense).'
 });
+Object.assign(window.I18N.fr,{
+recOpt:'Dépense récurrente (chaque mois)',
+recIncOpt:'Revenu récurrent (chaque mois)',
+recOptHelp:'Cochez si elle revient chaque mois : elle apparaîtra dans « À venir » et dans le calendrier les mois suivants.'
+});
+Object.assign(window.I18N.en,{
+recOpt:'Recurring expense (every month)',
+recIncOpt:'Recurring income (every month)',
+recOptHelp:'Tick if it comes back every month: it will show in “Upcoming” and in the calendar for the following months.'
+});

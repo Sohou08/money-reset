@@ -10,11 +10,7 @@
   --good:#1F8A5F; --bad:#C8402F; --warn:#C27A12;
   --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
   --body:"DM Sans","Segoe UI",system-ui,-apple-system,sans-serif;
-  color-scheme:light;
-}
-:root[data-theme="dark"]{
-  --bg:#0B1426; --card:#111D36; --ink:#EAF0FB; --muted:#9FB0CC; --line:#223152; --soft:#17233F;
-    --pri:#E8B23A; --pri-ink:#0B1426; --gold:#E8B23A; --orange:#F5A04A; --good:#4CC995; --bad:#F0806E; --warn:#EDB154; color-scheme:dark;
+  color-scheme:only light;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}

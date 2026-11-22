@@ -21,7 +21,7 @@ var AEMO={bank:'🏦',card:'💳',savings:'🐷',invest:'📈',cash:'💵',momo:
 var ACOL={bank:'#2F6FB0',savings:'#E8B23A',invest:'#7C6BB5',cash:'#4FA3C7',momo:'#F28C28',card:'#8A7F6F',loan:'#B33A2B'};
 var LIQ=['bank','cash','momo','card'];
 var MAIN=['home','goals','tx','cal','stats','send'];
-var NAVEMO={home:'🏠',goals:'🎯',tx:'💸',cal:'📅',stats:'📊',send:'🌍'};
+var NAVEMO={home:'🏠',goals:'🎯',tx:'💸',more:'☰'};
 var ECB='https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.fr.html';
 
 /* ---------- helpers ---------- */
@@ -254,7 +254,7 @@ function dlong(s){return new Intl.DateTimeFormat(loc(),{weekday:'long',day:'nume
 
 /* ---------- view state ---------- */
 var VM=ym(new Date()),TAB='home',F=null,SH=null;
-var SUBTABS=['more','recurring','trips','review','settings'];
+var SUBTABS=['more','recurring','trips','review','settings','cal','stats','send'];
 var UI={per:'1m',tf:'all',tc:'all',sv:'bilan',span:1,sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
 var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
@@ -638,8 +638,9 @@ V.send=function(){
     '<h3 style="margin-top:18px">'+esc(t('planL'))+'</h3>'+SENDS.map(function(s){return moneyField('f-p-'+s,'plan_'+s,m.plan[s]||0,t('sl_'+s));}).join('')+'<p class="small muted">'+esc(t('fieldsNote'))+'</p></div>';
 };
 V.more=function(){
-  var items=[['recurring','🔁'],['trips','✈️'],['settings','⚙️']];
-  return '<div class="card" style="padding:4px 16px">'+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
+  var items=[['stats','📊'],['cal','📅'],['send','🌍'],['recurring','🔁'],['trips','✈️'],['settings','⚙️']];
+  var imp='<button type="button" class="row" data-a="impOpen"><span class="ico">📄</span><span class="mid"><span class="t">'+esc(t('menuImport'))+'</span><span class="muted small">'+esc(t('menuImportH'))+'</span></span><span class="muted">›</span></button>';
+  return '<div class="card" style="padding:4px 16px">'+imp+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
 };
 V.recurring=function(){
   var occ=recOcc(VM),h='<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px"><p class="muted" style="margin:0">'+esc(t('recIntro'))+'</p><button type="button" class="link" data-a="addRec">+ '+esc(t('addRec'))+'</button></div>';
@@ -717,11 +718,11 @@ function hdrHtml(){
   var sub=SUBTABS.indexOf(TAB)>=0,back=TAB==='more'?'home':'more';
   return (sub?'<button type="button" class="back" data-a="tab" data-v="'+back+'" aria-label="'+esc(t('back'))+'">‹</button>':'')+'<h1>'+esc(t(TAB))+'</h1>'+
     '<div class="seg" role="group" aria-label="'+esc(t('display'))+'">'+CURS.map(function(c){return '<button type="button" data-a="disp" data-v="'+c+'" aria-pressed="'+(S.disp===c?'true':'false')+'">'+curSym(c)+'</button>';}).join('')+'</div>'+
-    (sub?'':'<button type="button" class="icon" data-a="tab" data-v="more" aria-label="'+esc(t('more'))+'">⋯</button>');
+    '';
 }
 function barHtml(){
   function nb(k){return '<button type="button" class="nb" data-a="tab" data-v="'+k+'"'+(TAB===k?' aria-current="page"':'')+'><span class="ni" aria-hidden="true">'+NAVEMO[k]+'</span><span class="nl">'+esc(t('nav_'+k))+'</span></button>';}
-  return nb('home')+nb('goals')+nb('tx')+'<button type="button" class="fab" data-a="addMenu" aria-label="'+esc(t('addTx'))+'">+</button>'+nb('cal')+nb('stats')+nb('send');
+  return nb('home')+nb('tx')+'<button type="button" class="fab" data-a="addTx" aria-label="'+esc(t('addTx'))+'">+</button>'+nb('goals')+nb('more');
 }
 function render(){
   document.documentElement.lang=S.lang;

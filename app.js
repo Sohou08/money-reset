@@ -1750,16 +1750,29 @@ function impDone(rows,src,bal){
   var ka=F.fileKey&&S.learnAcc&&S.learnAcc[F.fileKey];if(ka&&acc(ka)){F.acc=ka;F.autoAcc=true;}
   redrawSheet();
 }
+function scrub(x){
+  var q=String(x||'');
+  q=q.replace(/\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,4})?\b/g,'');
+  q=q.replace(/\b(?:\d[ -]?){12,19}\b/g,'');
+  q=q.replace(/\b[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b(?=.*\b(?:bic|swift)\b|$)/g,function(m){return /^[A-Z]{6,11}$/.test(m)&&/BIC|SWIFT/i.test(q)?'':m;});
+  q=q.replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,'');
+  q=q.replace(/(?:\+|00)?\d{1,3}[ .-]?(?:\(?\d\)?[ .-]?){8,11}\d\b/g,'');
+  q=q.replace(/\b0\d(?:[ .-]?\d{2}){4}\b/g,'');
+  q=q.replace(/\b(?:ref|reference|réf|mandat|rum|ics|id|n°|no)\s*[:.]?\s*[A-Z0-9-]{6,}\b/gi,'');
+  q=q.replace(/\b(M|MR|MME|MLLE|MONSIEUR|MADAME|Mr|Mme|Mlle|Mrs|Ms|Miss)\.?\s+([A-ZÀ-Ý][A-Za-zÀ-ÿ'’-]+)((?:\s+[A-ZÀ-Ý][A-Za-zÀ-ÿ'’-]+){0,2})/g,function(m,t,a,rest){return t+' '+a+(rest?rest.trim().split(/\s+/).map(function(w){return ' '+w.charAt(0)+'.';}).join(''):'');});
+  return q.replace(/\s{2,}/g,' ').replace(/[\s:;,\/-]+$/,'').trim();
+}
+function scrubRows(rows){return rows.map(function(r){r.label=scrub(r.label)||r.label.replace(/[0-9]/g,'')||'—';if(r.lk)r.lk=scrub(r.lk)||r.label;if(r.gtext)r.gtext=scrub(r.gtext);return r;});}
 function readOne(file){
   var name=String(file.name||'').toLowerCase(),type=file.type||'';
   if(/\.pdf$/.test(name)||type==='application/pdf'){
     return file.arrayBuffer().then(pdfLines).then(function(lines){
       if(lines.map(function(l){return l.t;}).join('').replace(/\s/g,'').length<20)return {err:'impScan'};
-      return {rows:parseLines(lines),bal:findBalance(lines),src:'pdf'};
+      return {rows:scrubRows(parseLines(lines)),bal:findBalance(lines),src:'pdf'};
     }).catch(function(){return {err:'impPdfFail'};});
   }
   if(type.indexOf('image/')===0||/\.(png|jpe?g|heic|webp)$/.test(name))return Promise.resolve({err:'impScan'});
-  return file.text().then(function(tx){return {rows:parseCSV(tx),src:'csv'};}).catch(function(){return {err:'impNone'};});
+  return file.text().then(function(tx){return {rows:scrubRows(parseCSV(tx)),src:'csv'};}).catch(function(){return {err:'impNone'};});
 }
 function handleFile(files){
   if(!files||!F)return;
@@ -1786,6 +1799,27 @@ function menuForm(){
   return '<div class="card" style="padding:4px 16px"><button type="button" class="row" data-a="impOpen"><span class="ico">📄</span><span class="mid"><span class="t">'+esc(t('menuImport'))+'</span><span class="muted small">'+esc(t('menuImportH'))+'</span></span><span class="muted">›</span></button>'+
     '<button type="button" class="row" data-a="addTx"><span class="ico">✍️</span><span class="mid"><span class="t">'+esc(t('menuManual'))+'</span><span class="muted small">'+esc(t('menuManualH'))+'</span></span><span class="muted">›</span></button></div>';
 }
+function impCoh(){
+  var res={near:{},diff:{},missing:[],n:0};if(!F||!F.rows||!F.rows.length)return res;
+  var minD='9999-99-99',maxD='',tol=function(a,b){return Math.abs(a-b)<0.005;},dd=function(a,b){return Math.abs((pd(a)-pd(b))/864e5);};
+  F.rows.forEach(function(r){if(r.date<minD)minD=r.date;if(r.date>maxD)maxD=r.date;});
+  var mine=S.tx.filter(function(x){return x.cur===F.cur&&(x.type==='exp'||x.type==='inc')&&x.date>=minD&&x.date<=maxD&&(!F.acc||F.acc==='__new'||x.acc===F.acc);});
+  var used={};
+  F.rows.forEach(function(r,i){
+    var inc=r.cat==='inc',k=keyOf(r.lk||r.label),best=null,kind='';
+    mine.forEach(function(x){
+      if(used[x.id]||(x.type==='inc')!==inc)return;var d=dd(x.date,r.date);
+      if(tol(x.amt,r.amt)&&d===0){used[x.id]=1;best=null;kind='ok';return;}
+      if(kind==='ok')return;
+      if(tol(x.amt,r.amt)&&d<=3&&!best){best=x;kind='near';}
+      else if(d<=3&&!best&&((k&&keyOf(x.note)===k)||(x.cat&&x.cat===r.cat&&x.amt>0&&Math.abs(x.amt-r.amt)/x.amt<=0.25))){best=x;kind='diff';}
+    });
+    if(kind==='near'&&best){res.near[i]=best;used[best.id]=1;res.n++;}
+    else if(kind==='diff'&&best){res.diff[i]=best;used[best.id]=1;res.n++;}
+  });
+  res.missing=mine.filter(function(x){return !used[x.id];});
+  return res;
+}
 function impAccField(){
   var inv=F.rows.length===1&&F.rows[0].inv,h='<label class="f" for="s-acc">'+esc(t(inv?'impPaidWith':'account'))+'</label>';
   if(S.accounts.length)h+='<select class="in" id="s-acc" data-s="acc">'+S.accounts.map(function(a){return '<option value="'+a.id+'"'+(a.id===F.acc?' selected':'')+'>'+esc(a.name)+' ('+esc(t('at_'+a.type))+', '+curLabel(a.cur)+')</option>';}).join('')+'<option value="__new"'+(F.acc==='__new'?' selected':'')+'>'+esc(t('accNewOpt'))+'</option></select>';
@@ -1802,6 +1836,13 @@ function importForm(){
     h+='<div class="note"><p class="small" style="margin:0"><strong>'+esc(t('impMonths'))+'</strong>'+(F.nFiles>1?' ('+F.nFiles+' '+esc(t('impFiles'))+(F.nBad?', '+F.nBad+' '+esc(t('impFilesBad')):'')+')':'')+'<br>'+mks.map(function(k){return esc(mlabel(k))+' : '+mc0[k];}).join(' · ')+'</p></div>';
     h+=impAccField()+'<label class="f">'+esc(t('currency'))+'</label><div class="chips">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>';
     if(F.bal)h+='<div class="note" style="margin-top:12px"><p class="small" style="margin:0 0 6px"><strong>'+esc(t('impBal'))+' : '+esc(fmt(F.bal.amt,F.cur))+(F.bal.date?' ('+esc(dfmt(F.bal.date))+')':'')+'</strong></p><div class="chips">'+chip('st','setBal',!!F.setBal,esc(t('impSetBal')))+'</div></div>';
+    var coh=impCoh(),nNear=Object.keys(coh.near).length,nDiff=Object.keys(coh.diff).length;
+    if(nNear||nDiff||coh.missing.length){
+      h+='<div class="note" style="margin-top:12px;border-left:4px solid #e07b00"><p class="small" style="margin:0 0 4px"><strong>⚠️ '+esc(t('cohT'))+'</strong></p>'+
+        (nDiff?'<p class="small" style="margin:3px 0">• '+nDiff+' '+esc(t('cohDiff'))+'</p>':'')+
+        (nNear?'<p class="small" style="margin:3px 0">• '+nNear+' '+esc(t('cohNear'))+'</p>':'')+
+        (coh.missing.length?'<p class="small" style="margin:3px 0">• '+coh.missing.length+' '+esc(t('cohMissing'))+'</p><p class="small muted" style="margin:0 0 0 10px">'+coh.missing.slice(0,5).map(function(x){return esc(dfmt(x.date)+' · '+(x.note||t('c_'+x.cat))+' · '+fmt(x.amt,x.cur));}).join('<br>')+'</p>':'')+'</div>';
+    }else if(S.tx.length)h+='<p class="small pos" style="margin:10px 0 0">✓ '+esc(t('cohOk'))+'</p>';
     var nsel=F.rows.filter(function(r){return r.on;}).length;
     h+='<h3 style="margin-top:16px">'+esc(F.rows.length+' '+t('impFound'))+'</h3><p class="small muted" style="margin:0 0 8px">'+nsel+' / '+F.rows.length+' '+esc(t('impSelCount'))+'</p>'+
       '<div class="chips sm" style="margin-bottom:10px"><button type="button" class="chip" data-a="impSel" data-v="all">'+esc(t('impAll'))+'</button><button type="button" class="chip" data-a="impSel" data-v="new">'+esc(t('impNew'))+'</button><button type="button" class="chip" data-a="impSel" data-v="none">'+esc(t('impNone'))+'</button></div>';
@@ -1816,7 +1857,7 @@ function importForm(){
       var opts='<option value="inc"'+(r.cat==='inc'?' selected':'')+'>'+esc(CEMO.inc+' '+t('m_inc'))+'</option><option value="withdraw"'+(r.cat==='withdraw'?' selected':'')+'>💵 '+esc(t('wdCat'))+'</option>'+CATS.map(function(k){return '<option value="'+k+'"'+(r.cat===k?' selected':'')+'>'+esc(CEMO[k]+' '+t('c_'+k))+'</option>';}).join('');
       return '<div class="irow'+(r.dup?' dup':'')+'"><label class="ichk"><input type="checkbox" data-imp="'+i+'" data-k="on"'+(r.on?' checked':'')+'><span class="t">'+esc(r.label)+'</span></label>'+
         '<span class="amt '+(r.cat==='inc'?'pos':'')+'">'+(r.cat==='inc'?'+':'−')+esc(fmt(r.amt,F.cur))+'</span>'+
-        '<span class="muted small">'+esc(dfmt(r.date))+(r.dup?' · '+esc(t('impDup')):'')+(!r.known?' · '+esc(t('impCheck')):'')+(r.remit&&r.cat==='family'?' · 🌍 '+esc(t('impRemit')):'')+'</span>'+
+        '<span class="muted small">'+esc(dfmt(r.date))+(r.dup?' · '+esc(t('impDup')):'')+(coh.diff[i]?' · <strong style="color:#e07b00">⚠️ '+esc(t('cohTagDiff'))+' '+esc(fmt(coh.diff[i].amt,coh.diff[i].cur))+'</strong>':'')+(coh.near[i]?' · <strong style="color:#e07b00">⚠️ '+esc(t('cohTagNear'))+' '+esc(dfmt(coh.near[i].date))+'</strong>':'')+(!r.known?' · '+esc(t('impCheck')):'')+(r.remit&&r.cat==='family'?' · 🌍 '+esc(t('impRemit')):'')+'</span>'+
         (r.cat==='withdraw'?'<span class="small irec">💵 '+esc(t('wdNote'))+'</span>':'<label class="small irec"><input type="checkbox" data-imp="'+i+'" data-k="rec"'+(r.rec?' checked':'')+'> '+esc(t('impRec'))+'</label>')+
         '<select class="in" data-imp="'+i+'" data-k="cat" aria-label="'+esc(t('category'))+'">'+opts+'</select>'+impPost(i,r)+'</div>';
     }).join('');

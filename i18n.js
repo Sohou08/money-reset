@@ -384,3 +384,11 @@ recEdit:'Edit this debit',
 close:'Close',
 repPlanned:'Of which planned (not happened yet):'
 });
+Object.assign(window.I18N.fr,{
+wdCat:'Retrait d’espèces',
+wdNote:'Va dans votre compte « Espèces » (virement interne, pas une dépense).'
+});
+Object.assign(window.I18N.en,{
+wdCat:'Cash withdrawal',
+wdNote:'Goes to your “Cash” account (internal transfer, not an expense).'
+});

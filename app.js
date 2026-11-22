@@ -749,7 +749,7 @@ function sumSend(){
     if(st==='below')h+='<p>'+esc(t('toMin'))+' <strong>'+esc(M(min-sent))+'</strong></p>';
     if(st==='in')h+='<p>'+esc(t('leftToMax'))+' <strong>'+esc(M(max-sent))+'</strong></p>';
     if(st==='above')h+='<p class="neg">'+esc(t('overMax'))+' <strong>'+esc(M(sent-max))+'</strong></p>';
-    h+='<p class="small muted" style="margin:8px 0 0">'+esc(t('allocIs'))+' <strong>'+esc(t(S.sendAlloc==='wants'?'ruleW':'ruleN'))+'</strong></p><button type="button" class="btn ghost full" data-a="editRange">'+esc(t('rangeEdit'))+'</button></div>';
+    h+='<button type="button" class="btn ghost full" data-a="editRange">'+esc(t('rangeEdit'))+'</button></div>';
   }
   h+='<div class="card"><h3>'+esc(t('sendList'))+'</h3>'+sendList(c)+'<button type="button" class="btn full" data-a="addSend">+ '+esc(t('addSend'))+'</button></div>';
   h+='<div class="card"><h3>'+esc(t('suggest'))+'</h3><table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>';
@@ -1114,17 +1114,16 @@ ACT.saveTrip=function(){
 ACT.toggleTrip=function(v){var tgt=S.trips.filter(function(y){return y.id===v;})[0];if(!tgt)return;var on=!tgt.active;if(on)S.trips.forEach(function(x){x.active=false;});tgt.active=on;save();render();};
 ACT.delTrip=function(v){S.trips=S.trips.filter(function(x){return x.id!==v;});S.tx.forEach(function(x){if(x.trip===v){x.trip=null;x.pay='';}});save();render();};
 function rangeForm(){
-  var h='<p class="muted small">'+esc(t('rangeHelp'))+'</p>'+inp('s-rmin','rmin',t('minF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"')+inp('s-rmax','rmax',t('maxF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"')+'<label class="f">'+esc(t('allocLbl'))+'</label><div class="chips">'+sfchip('alloc','needs',esc(t('ruleN')))+sfchip('alloc','wants',esc(t('ruleW')))+'</div><p class="small muted" style="margin:6px 0 0">'+esc(t('allocHelp'))+'</p>';
+  var h='<p class="muted small">'+esc(t('rangeHelp'))+'</p>'+inp('s-rmin','rmin',t('minF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"')+inp('s-rmax','rmax',t('maxF')+' ('+curSym(S.disp)+')','0','inputmode="decimal"');
   var mn=num(F.rmin),mx=num(F.rmax);
   if(mx>0)h+='<p class="small muted" style="margin-top:8px">≈ '+esc(fcfa(toEur(mn,S.disp)))+' – '+esc(fcfa(toEur(mx,S.disp)))+'</p>';
   return h+'<p class="small muted">'+esc(t('rangeCarry'))+'</p>'+btnRow('saveRange','');
 }
-ACT.editRange=function(){var m=mget(VM);F={rmin:m.sendMin?fieldVal(m.sendMin):'',rmax:m.sendMax?fieldVal(m.sendMax):'',alloc:S.sendAlloc||''};openSheet(t('yourRange'),rangeForm);};
+ACT.editRange=function(){var m=mget(VM);F={rmin:m.sendMin?fieldVal(m.sendMin):'',rmax:m.sendMax?fieldVal(m.sendMax):''};openSheet(t('yourRange'),rangeForm);};
 ACT.saveRange=function(){
   var mn=num(F.rmin),mx=num(F.rmax);
   if(!(mx>0)||mn<0||mn>mx){toast(t('errRange'),true);return;}
-  if(F.alloc!=='needs'&&F.alloc!=='wants'){toast(t('errAlloc'),true);return;}
-  S.sendAlloc=F.alloc;var m=mset(VM);m.sendMin=toEur(mn,S.disp);m.sendMax=toEur(mx,S.disp);save();closeSheet();render();toast(t('saved'));
+  var m=mset(VM);m.sendMin=toEur(mn,S.disp);m.sendMax=toEur(mx,S.disp);save();closeSheet();render();toast(t('saved'));
 };
 ACT.addSend=function(){ACT.addTx();F.mode='exp';F.cat='family';F.date=(VM===ym(new Date()))?ymd(new Date()):VM+'-01';redrawSheet();};
 ACT.useSugg=function(){var sg=suggest(VM),m=mset(VM);m.sendMin=sg.min;m.sendMax=sg.max;save();render();};
@@ -1235,6 +1234,7 @@ function keyOf(label){
   var w=n.split(/\s+/).filter(function(x){return x.length>=3;});
   return w.slice(0,2).join(' ');
 }
+var WD_RE=/retrait|\bdab\b|\batm\b|cash withdrawal|withdrawal|distributeur|especes/;
 var POSTRULES=[
  ['alimony',/pension alimentaire/],['taxProp',/taxe fonciere|foncier/],['taxHab',/taxe d.?habitation|taxe habitation/],['cfe',/\bcfe\b/],
  ['taxIncome',/impots?\b|dgfip|impots\.gouv|prelevement a la source/],
@@ -1282,7 +1282,7 @@ function postGuess(n){
 }
 function guessRow(label,sign,extra){
   var g=guessRow0(label,sign,extra),n=norm(label+' '+(extra||'')),k=keyOf(label),LP=S.learnPost||{};
-  if(g.cat==='inc'||g.cat==='family')return g;
+  if(g.cat==='inc'||g.cat==='family'||g.cat==='withdraw')return g;
   var pg=(k&&LP[k]&&postCat(LP[k])===g.cat)?{post:LP[k],cat:g.cat}:postGuess(n);
   if(pg){
     if(g.cat==='needs'||g.cat==='wants'||g.cat==='culture'||g.cat==='extra'||!g.known){if(pg.cat!=='save'&&pg.cat!=='invest')g.cat=pg.cat;}
@@ -1292,6 +1292,7 @@ function guessRow(label,sign,extra){
 }
 function guessRow0(label,sign,extra){
   var n=norm(label+' '+(extra||'')),k=keyOf(label),L=S.learn||{};
+  if(sign<=0&&WD_RE.test(n))return {cat:'withdraw',sub:'',known:true};
   if(k&&L[k])return {cat:L[k],sub:L[k]==='family'?'mobile':'',known:true,remit:L[k]==='family'};
   if(sign>=0&&INC_RE.test(n))return {cat:'inc',sub:'',known:true};
   for(var i=0;i<RULES.length;i++){if(RULES[i][1].test(n)){var amb=RULES[i][0]==='family'&&/orange ?money/.test(n)&&!/sendwave|lemfi|remitly|worldremit|western ?union|moneygram|taptap|ria money/.test(n);return {cat:RULES[i][0],sub:RULES[i][2]||'',known:!amb,remit:RULES[i][0]==='family'};}}
@@ -1557,22 +1558,22 @@ function importForm(){
     if(F.src==='pdf')h+='<div class="note"><p class="small" style="margin:0">'+esc(t('impUnsure'))+'</p></div>';
     h+=impAccField()+'<label class="f">'+esc(t('currency'))+'</label><div class="chips">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>';
     if(F.bal)h+='<div class="note" style="margin-top:12px"><p class="small" style="margin:0 0 6px"><strong>'+esc(t('impBal'))+' : '+esc(fmt(F.bal.amt,F.cur))+(F.bal.date?' ('+esc(dfmt(F.bal.date))+')':'')+'</strong></p><div class="chips">'+chip('st','setBal',!!F.setBal,esc(t('impSetBal')))+'</div></div>';
-    var nsel=F.rows.filter(function(r){return r.on;}).length,hasFam=F.rows.some(function(r){return r.on&&r.cat==='family';});
-    if(hasFam&&!S.sendAlloc)h+='<div class="note" style="margin-top:12px"><p class="small" style="margin:0 0 6px"><strong>'+esc(t('allocQ'))+'</strong></p><div class="chips">'+sfchip('alloc','needs',esc(t('ruleN')))+sfchip('alloc','wants',esc(t('ruleW')))+'</div><p class="small muted" style="margin:6px 0 0">'+esc(t('allocHelp'))+'</p></div>';
+    var nsel=F.rows.filter(function(r){return r.on;}).length;
     h+='<h3 style="margin-top:16px">'+esc(F.rows.length+' '+t('impFound'))+'</h3><p class="small muted" style="margin:0 0 8px">'+nsel+' / '+F.rows.length+' '+esc(t('impSelCount'))+'</p>'+
       '<div class="chips sm" style="margin-bottom:10px"><button type="button" class="chip" data-a="impSel" data-v="all">'+esc(t('impAll'))+'</button><button type="button" class="chip" data-a="impSel" data-v="new">'+esc(t('impNew'))+'</button><button type="button" class="chip" data-a="impSel" data-v="none">'+esc(t('impNone'))+'</button></div>';
     function impPost(i,r){
+      if(r.cat==='withdraw')return '';
       var inc=r.cat==='inc',L=postList(inc?'inc':'exp',inc?'':r.cat);if(!L.length||r.cat==='family')return '';
       var opt=function(k){return '<option value="'+k+'"'+(r.post===k?' selected':'')+'>'+esc(t('po_'+k))+'</option>';};
       var body=inc?L.map(opt).join(''):(POSTG[r.cat]||[]).map(function(g){return '<optgroup label="'+esc(t(g[0]))+'">'+g[1].map(opt).join('')+'</optgroup>';}).join('');
       return '<select class="in" data-imp="'+i+'" data-k="post" aria-label="'+esc(t(inc?'incSource':'poste'))+'"><option value="">'+esc(t('posteNone'))+'</option>'+body+'</select>';
     }
     h+=F.rows.map(function(r,i){
-      var opts='<option value="inc"'+(r.cat==='inc'?' selected':'')+'>'+esc(CEMO.inc+' '+t('m_inc'))+'</option>'+CATS.map(function(k){return '<option value="'+k+'"'+(r.cat===k?' selected':'')+'>'+esc(CEMO[k]+' '+t('c_'+k))+'</option>';}).join('');
+      var opts='<option value="inc"'+(r.cat==='inc'?' selected':'')+'>'+esc(CEMO.inc+' '+t('m_inc'))+'</option><option value="withdraw"'+(r.cat==='withdraw'?' selected':'')+'>💵 '+esc(t('wdCat'))+'</option>'+CATS.map(function(k){return '<option value="'+k+'"'+(r.cat===k?' selected':'')+'>'+esc(CEMO[k]+' '+t('c_'+k))+'</option>';}).join('');
       return '<div class="irow'+(r.dup?' dup':'')+'"><label class="ichk"><input type="checkbox" data-imp="'+i+'" data-k="on"'+(r.on?' checked':'')+'><span class="t">'+esc(r.label)+'</span></label>'+
         '<span class="amt '+(r.cat==='inc'?'pos':'')+'">'+(r.cat==='inc'?'+':'−')+esc(fmt(r.amt,F.cur))+'</span>'+
         '<span class="muted small">'+esc(dfmt(r.date))+(r.dup?' · '+esc(t('impDup')):'')+(!r.known?' · '+esc(t('impCheck')):'')+(r.remit&&r.cat==='family'?' · 🌍 '+esc(t('impRemit')):'')+'</span>'+
-        '<label class="small irec"><input type="checkbox" data-imp="'+i+'" data-k="rec"'+(r.rec?' checked':'')+'> '+esc(t('impRec'))+'</label>'+
+        (r.cat==='withdraw'?'<span class="small irec">💵 '+esc(t('wdNote'))+'</span>':'<label class="small irec"><input type="checkbox" data-imp="'+i+'" data-k="rec"'+(r.rec?' checked':'')+'> '+esc(t('impRec'))+'</label>')+
         '<select class="in" data-imp="'+i+'" data-k="cat" aria-label="'+esc(t('category'))+'">'+opts+'</select>'+impPost(i,r)+'</div>';
     }).join('');
     return h+'<div class="btns" style="grid-template-columns:1fr 1fr"><button type="button" class="btn" data-a="impGo">'+esc(t('impGo'))+' ('+nsel+')</button><button type="button" class="btn ghost" data-a="impOpen">'+esc(t('impAgain'))+'</button></div>';
@@ -1592,12 +1593,18 @@ ACT.impOpen=function(){
 ACT.impGo=function(){
   var sel=F.rows.filter(function(r){return r.on;});
   if(!sel.length){toast(t('impZero'),true);return;}
-  if(sel.some(function(r){return r.cat==='family';})&&!S.sendAlloc&&!F.alloc){toast(t('errAlloc'),true);return;}
   var created=(F.acc==='__new')||(!F.acc&&!S.accounts.length);
   ensureAcc();
   var a=acc(F.acc),n=0,L=S.learn=S.learn||{},mc={},minD='9999-99-99',maxD='';
   sel.forEach(function(r){
     var mk=r.date.slice(0,7);mc[mk]=(mc[mk]||0)+1;if(r.date<minD)minD=r.date;if(r.date>maxD)maxD=r.date;
+    if(r.cat==='withdraw'){
+      var cashA=S.accounts.filter(function(x){return x.type==='cash'&&x.cur===F.cur;})[0]||S.accounts.filter(function(x){return x.type==='cash';})[0];
+      if(!cashA){cashA={id:uid(),name:t('at_cash'),type:'cash',cur:F.cur,open:0,since:r.date};S.accounts.push(cashA);}
+      else if(cashA.since>r.date)cashA.since=r.date;
+      if(F.acc&&F.acc!==cashA.id){S.tx.push(mkTx(r.date,'tr',r.amt,F.cur,'',r.label,F.acc,{to:cashA.id}));n++;}
+      return;
+    }
     var inc=r.cat==='inc',extra={sub:(!inc&&r.cat==='family')?(r.sub||'mobile'):'',post:postOk(inc?'inc':'exp',inc?'':r.cat,r.post)};
     if(r.rec&&r.cat!=='save'&&r.cat!=='invest'){
       var rk=keyOf(r.lk||r.label),ex=S.rec.filter(function(x){return rk&&x.type===(inc?'inc':'exp')&&keyOf(x.name)===rk;})[0];
@@ -1610,7 +1617,6 @@ ACT.impGo=function(){
     if(k&&r.postSet&&extra.post){S.learnPost=S.learnPost||{};S.learnPost[k]=extra.post;}
   });
   var ks=Object.keys(L);if(ks.length>300)ks.slice(0,ks.length-300).forEach(function(k){delete L[k];});
-  if(F.alloc&&!S.sendAlloc)S.sendAlloc=F.alloc;
   if(a&&created&&minD<a.since)a.since=minD;
   if(a&&F.bal&&F.setBal&&a.cur===F.cur&&a.type!=='loan'){var bd=F.bal.date||maxD;if(a.since<=bd)a.open+=F.bal.amt-accBal(a,bd);}
   if(F.fileKey&&F.fileKey.length>=3&&F.acc){S.learnAcc=S.learnAcc||{};S.learnAcc[F.fileKey]=F.acc;}

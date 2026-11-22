@@ -187,10 +187,8 @@ function accBal(a,upTo){
 }
 function nwAt(date){return sum(S.accounts,function(a){return toEur(accBal(a,date),a.cur);});}
 function nwSeries(per){
-  var now=new Date(),pts=[],i,d;
-  if(per==='1m'){for(i=30;i>=0;i-=3){d=new Date(now);d.setDate(d.getDate()-i);pts.push(ymd(d));}}
-  else if(per==='ytd'){for(i=0;i<=now.getMonth();i++)pts.push(ymd(new Date(now.getFullYear(),i,1)));pts.push(ymd(now));}
-  else if(per==='1y'){for(i=11;i>=0;i--)pts.push(ymd(new Date(now.getFullYear(),now.getMonth()-i,1)));pts.push(ymd(now));}
+  var now=new Date(),pts=[],i,d,SP={'1m':[30,3],'3m':[91,7],'6m':[182,14],'1y':[365,30]};
+  if(SP[per]){for(i=SP[per][0];i>0;i-=SP[per][1]){d=new Date(now);d.setDate(d.getDate()-i);pts.push(ymd(d));}pts.push(ymd(now));}
   else{
     var min=ymd(now);S.accounts.forEach(function(a){if(a.since<min)min=a.since;});
     var s=pd(min),n=0;pts.push(min);
@@ -432,12 +430,14 @@ V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
   var h=topCard()+remindBox();
   h+='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
-    '<div class="chips sm">'+['1m','ytd','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
-  h+='<h3 class="sec">'+esc(t('accounts'))+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
+    '<div class="chips sm">'+['1m','3m','6m','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
+  var upto=VM<ym(new Date())?VM+'-'+('0'+dim(VM)).slice(-2):null,mname=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+VM.slice(0,4),+VM.slice(5,7)-1,1)),mleft=splitData(calcM(VM),VM).left;
+  h+='<h3 class="sec">'+esc(t('accounts'))+' · '+esc(mname)+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
+  h+='<p class="small" style="margin:0 0 8px"><span class="muted">'+esc(t('leftIn'))+' '+esc(mname)+' :</span> <strong class="'+(mleft<0?'neg':'')+'">'+esc(M(mleft))+'</strong></p>';
   if(!S.accounts.length)h+='<div class="card flat"><p class="muted">'+esc(t('noAcc2'))+'</p></div>';
   else{
-    h+='<div class="card">'+S.accounts.map(function(a){var b=accBal(a);return '<button type="button" class="row" data-a="accOpen" data-v="'+a.id+'"><span class="ico">'+AEMO[a.type]+'</span><span class="mid"><span class="t">'+esc(a.name)+'</span><span class="muted small">'+esc(t('at_'+a.type))+'</span></span><span class="amt '+(b<0?'neg':'')+'">'+esc(fmt(b,a.cur))+(a.cur!==S.disp?'<span class="s">'+esc(M(toEur(b,a.cur)))+'</span>':'')+'</span></button>';}).join('')+'</div>';
-    var by={},debts=0;S.accounts.forEach(function(a){var e=toEur(accBal(a),a.cur);if(e>=0)by[a.type]=(by[a.type]||0)+e;else debts+=-e;});
+    h+='<div class="card">'+S.accounts.map(function(a){var b=accBal(a,upto),nd=upto&&a.since>upto;return '<button type="button" class="row" data-a="accOpen" data-v="'+a.id+'"><span class="ico">'+AEMO[a.type]+'</span><span class="mid"><span class="t">'+esc(a.name)+'</span><span class="muted small">'+esc(t('at_'+a.type))+'</span></span><span class="amt '+(b<0?'neg':'')+'">'+(nd?'—':esc(fmt(b,a.cur)))+(a.cur!==S.disp?'<span class="s">'+esc(M(toEur(b,a.cur)))+'</span>':'')+'</span></button>';}).join('')+'</div>';
+    var by={},debts=0;S.accounts.forEach(function(a){var e=toEur(accBal(a,upto),a.cur);if(e>=0)by[a.type]=(by[a.type]||0)+e;else debts+=-e;});
     var tot=sum(Object.keys(by),function(k){return by[k];});
     if(tot>0)h+='<div class="card"><h3>'+esc(t('alloc'))+'</h3><div class="stack">'+Object.keys(by).map(function(k){return '<i style="width:'+(by[k]/tot*100).toFixed(1)+'%;background:'+ACOL[k]+'"></i>';}).join('')+'</div><div class="legend">'+Object.keys(by).map(function(k){return '<span><i style="background:'+ACOL[k]+'"></i>'+esc(t('at_'+k))+' '+Math.round(by[k]/tot*100)+' %</span>';}).join('')+'</div>'+(debts>0?'<p class="small neg" style="margin-top:8px">'+esc(t('debts'))+' : '+esc(M(debts))+'</p>':'')+'</div>';
   }

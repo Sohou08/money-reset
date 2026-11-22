@@ -440,3 +440,17 @@ Object.assign(window.I18N.en,{
 noOpsMonth:'No transactions this month',
 noOpsHelp:'Nothing is recorded for this month yet: add a transaction or import a statement for it to see what is left.'
 });
+Object.assign(window.I18N.fr,{
+pc_3m:'3 M',
+pc_6m:'6 M',
+per_3m:'sur 3 mois',
+per_6m:'sur 6 mois',
+leftIn:'Il vous reste en'
+});
+Object.assign(window.I18N.en,{
+pc_3m:'3 M',
+pc_6m:'6 M',
+per_3m:'over 3 months',
+per_6m:'over 6 months',
+leftIn:'Left in'
+});

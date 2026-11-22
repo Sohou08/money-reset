@@ -247,3 +247,12 @@ button.catrow:hover,button.catrow:focus-visible{background:var(--soft)}
 .masc-row h1{font-size:1.25rem}
 .bubble{position:relative;margin:0;background:var(--soft);border-radius:16px;padding:10px 14px;font-weight:600;font-size:.95rem}
 .bubble::before{content:"";position:absolute;left:-7px;top:50%;margin-top:-7px;border:7px solid transparent;border-left:0;border-right-color:var(--soft)}
+
+img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
+.bigadd{display:block;width:100%;margin:14px 0;padding:16px;border:0;border-radius:18px;background:var(--orange);color:#fff;font:700 1.1rem var(--display,inherit);box-shadow:0 8px 18px rgba(242,140,40,.35);cursor:pointer}
+.bigadd:active{transform:scale(.98)}
+details.more{margin:6px 0 0}
+details.more>summary{cursor:pointer;list-style:none;text-align:center;padding:12px;font-weight:700;color:var(--gold);border:1.5px dashed var(--line);border-radius:16px;margin-bottom:12px}
+details.more>summary::-webkit-details-marker{display:none}
+.card.alert{border:1.5px solid var(--orange)}
+.alrow{display:flex;justify-content:space-between;gap:10px;margin:6px 0 0;font-size:.95rem}

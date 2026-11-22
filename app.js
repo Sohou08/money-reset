@@ -262,17 +262,8 @@ function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(
 /* ---------- components ---------- */
 
 function MASC(sz,mood){
-  var cheer=mood==='cheer';
-  var eyes=cheer?'<path d="M39 68q7-9 14 0M67 68q7-9 14 0" stroke="#14213D" stroke-width="3.6" fill="none" stroke-linecap="round"/>'
-    :'<ellipse cx="46" cy="68" rx="5" ry="6.5" fill="#14213D"/><ellipse cx="74" cy="68" rx="5" ry="6.5" fill="#14213D"/><circle cx="47.8" cy="65.6" r="1.8" fill="#fff"/><circle cx="75.8" cy="65.6" r="1.8" fill="#fff"/>';
-  var mouth=cheer?'<path d="M47 79q13 17 26 0z" fill="#14213D"/><path d="M52 85q8 6 16 0" fill="#F28C28"/>':'<path d="M48 80q12 12 24 0" stroke="#14213D" stroke-width="3.6" fill="none" stroke-linecap="round"/>';
-  var spark=cheer?'<path d="M14 30l2.2 5.8 5.8 2.2-5.8 2.2L14 46l-2.2-5.8L6 38l5.8-2.2z" fill="#E8B23A"/><path d="M108 70l1.8 4.6 4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6-4.6-1.8 4.6-1.8z" fill="#F28C28"/>':'';
-  return '<svg class="masc" width="'+sz+'" height="'+sz+'" viewBox="0 0 120 120" role="img" aria-label="Xaali" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD76A"/><stop offset="1" stop-color="#E9A21B"/></linearGradient></defs>'+
-  '<ellipse cx="60" cy="112" rx="30" ry="5" fill="#14213D" opacity=".12"/>'+
-  '<circle cx="60" cy="68" r="42" fill="url(#mg)" stroke="#C98A0B" stroke-width="3"/><circle cx="60" cy="68" r="35" fill="none" stroke="#FFF1BF" stroke-width="2" stroke-dasharray="3 4"/>'+
-  '<path d="M19 60C14 8 106 8 101 60C84 50 36 50 19 60z" fill="#14213D"/><path d="M22 53C46 43 74 43 98 53" stroke="#F28C28" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M24 44C48 34 72 34 96 44" stroke="#E8B23A" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M34 30C50 22 70 22 86 30" stroke="#F28C28" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".8"/>'+
-  '<ellipse cx="88" cy="16" rx="11" ry="6.5" transform="rotate(-30 88 16)" fill="#14213D"/><ellipse cx="102" cy="22" rx="10" ry="6" transform="rotate(35 102 22)" fill="#14213D"/><circle cx="94" cy="19" r="5.2" fill="#F28C28"/>'+
-  eyes+'<circle cx="35" cy="80" r="6.5" fill="#F28C28" opacity=".35"/><circle cx="85" cy="80" r="6.5" fill="#F28C28" opacity=".35"/>'+mouth+spark+'</svg>';
+  var pose={cheer:'cheer',worry:'worry',wave:'wave'}[mood]||'scan';
+  return '<img class="masc" src="assets/doc-'+pose+'.webp" height="'+sz+'" alt="Docteur Reset" loading="lazy" decoding="async">';
 }
 function chip(a,v,on,label,cls){return '<button type="button" class="chip '+(cls||'')+'" data-a="'+a+'" data-v="'+esc(v)+'" aria-pressed="'+(on?'true':'false')+'">'+label+'</button>';}
 function sfchip(field,val,label,cls){return chip('sf',field+':'+val,F[field]===val,label,cls);}
@@ -344,12 +335,51 @@ function fbCard(){
     '<textarea class="in" id="fb-text" maxlength="2000" style="margin-top:10px" placeholder="'+esc(t('fbPh'))+'">'+esc(f.txt)+'</textarea>'+
     '<button type="button" class="btn full" data-a="fbSend"'+(f.busy?' disabled':'')+'>'+esc(t('fbSend'))+'</button></div>';
 }
+
+function homeTop(c,over){
+  return '<div class="masc-row">'+MASC(64,over?'worry':'cheer')+'<p class="bubble">'+esc(t(over?'homeBad':'homeOk'))+'</p></div>';
+}
+function homeAlerts(c){
+  var rows=SPEND.filter(function(k){return S.env[k]>0&&c.by[k]/S.env[k]>=0.8;}).map(function(k){
+    var p=c.by[k]/S.env[k],bad=p>1;
+    return '<p class="alrow"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span class="'+(bad?'neg':'')+'">'+Math.round(p*100)+' % '+esc(t('alertUsed'))+' · '+esc(t(bad?'alertOver':'alertNear'))+'</span></p>';
+  });
+  if(!rows.length)return '';
+  return '<div class="card alert"><div class="masc-row">'+MASC(52,'worry')+'<h3 style="margin:0">'+esc(t('alertT'))+'</h3></div>'+rows.join('')+'</div>';
+}
+function homeWeek(){
+  if(!S.tx.length)return '';
+  var lim=new Date();lim.setDate(lim.getDate()-6);var from=ymd(lim),to=ymd(new Date());
+  var tx=S.tx.filter(function(x){return x.type==='exp'&&x.date>=from&&x.date<=to&&x.cat!=='save'&&x.cat!=='invest';});
+  if(!tx.length)return '<div class="card flat"><h3>'+esc(t('weekT'))+'</h3><p class="muted small" style="margin:0">'+esc(t('weekNone'))+'</p></div>';
+  var tot=sum(tx,function(x){return x.eur;}),by={};
+  tx.forEach(function(x){by[x.cat]=(by[x.cat]||0)+x.eur;});
+  var top=Object.keys(by).sort(function(a,b){return by[b]-by[a];})[0];
+  return '<div class="card"><h3>'+esc(t('weekT'))+'</h3><div class="big" style="font-size:1.6rem">'+esc(M(tot))+'</div><p class="small muted" style="margin:2px 0 0">'+esc(t('weekSpent'))+'</p><p class="small" style="margin:8px 0 0">'+esc(t('weekTop'))+' '+CEMO[top]+' '+esc(t('c_'+top))+' · '+esc(M(by[top]))+'</p></div>';
+}
+function guideForm(){
+  var g=F.g,sym=curSym(S.disp);
+  if(g===4){
+    var c=calcM(ym(new Date())),left=c.budget,dl=dim(ym(new Date()))-new Date().getDate()+1;
+    var ok=left>0;
+    return '<div class="masc-row">'+MASC(110,ok?'cheer':'worry')+'<p class="bubble">'+esc(t('gResT'))+'</p></div>'+
+      (ok?'<p style="margin:6px 0">'+esc(t('gResOk'))+' <strong>'+esc(M(left))+'</strong> '+esc(t('gResPer'))+' <strong>'+esc(M(left/Math.max(dl,1)))+'</strong> '+esc(t('gResDay'))+'</p>':'<p style="margin:6px 0"><strong class="neg">'+esc(t('gResBad'))+' '+esc(M(-left))+'</strong></p><p class="muted small">'+esc(t('gResBadH'))+'</p>')+
+      '<div class="btns" style="grid-template-columns:1fr"><button type="button" class="btn" data-a="gDone">'+esc(t('gDone'))+'</button></div>';
+  }
+  var f=['inc','fix','sav'][g-1];
+  return '<p class="small muted" style="margin:0 0 6px">'+esc(t('gStep'))+' '+g+' / 3</p><div class="masc-row">'+MASC(96,'scan')+'<p class="bubble">'+esc(t('gQ'+g))+'</p></div>'+
+    '<p class="small muted" style="margin:0 0 8px">'+esc(t('gQ'+g+'h'))+'</p>'+
+    '<label class="f" for="s-g">'+esc(sym)+'</label><input class="in amtbig" id="s-g" data-s="'+f+'" inputmode="decimal" placeholder="0" value="'+esc(F[f])+'">'+
+    '<div class="btns" style="grid-template-columns:'+(g>1?'1fr 1fr':'1fr')+'">'+(g>1?'<button type="button" class="btn ghost" data-a="gBack">'+esc(t('gBack'))+'</button>':'')+'<button type="button" class="btn" data-a="gNext">'+esc(t('gNext'))+'</button></div>';
+}
 V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
   var h='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
     '<div class="chips sm">'+['1m','ytd','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
-  if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)h='<section class="card"><div class="masc-row">'+MASC(72)+'<p class="bubble">'+esc(t('mascHi'))+'</p></div><h3>'+esc(t('welcomeT'))+'</h3><p class="muted">'+esc(t('welcomeP'))+'</p><ol class="small" style="padding-left:18px;margin:8px 0"><li>'+esc(t('welcome1'))+'</li><li>'+esc(t('welcome2'))+'</li><li>'+esc(t('welcome3'))+'</li></ol><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button><button type="button" class="btn ghost full" data-a="loadDemo">'+esc(t('welcomeDemo'))+'</button></section>'+h;
+  if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)return '<section class="card"><div class="masc-row">'+MASC(120,'scan')+'<p class="bubble">'+esc(t('mascHi'))+'</p></div><h3>'+esc(t('welcomeT'))+'</h3><button type="button" class="btn full" data-a="guide">'+esc(t('gStart'))+'</button><button type="button" class="btn ghost full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button><button type="button" class="btn ghost full" data-a="loadDemo">'+esc(t('welcomeDemo'))+'</button></section>';
+  var K=[h.length];
   if(monthTx(ym(new Date())).length<3)h+='<div class="card"><h3>'+esc(t('impHomeT'))+'</h3><p class="muted small">'+esc(t('impHomeP'))+'</p><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button></div>';
+  K.push(h.length);
   h+='<h3 class="sec">'+esc(t('accounts'))+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
   if(!S.accounts.length)h+='<div class="card flat"><p class="muted">'+esc(t('noAcc2'))+'</p></div>';
   else{
@@ -358,15 +388,19 @@ V.home=function(){
     var tot=sum(Object.keys(by),function(k){return by[k];});
     if(tot>0)h+='<div class="card"><h3>'+esc(t('alloc'))+'</h3><div class="stack">'+Object.keys(by).map(function(k){return '<i style="width:'+(by[k]/tot*100).toFixed(1)+'%;background:'+ACOL[k]+'"></i>';}).join('')+'</div><div class="legend">'+Object.keys(by).map(function(k){return '<span><i style="background:'+ACOL[k]+'"></i>'+esc(t('at_'+k))+' '+Math.round(by[k]/tot*100)+' %</span>';}).join('')+'</div>'+(debts>0?'<p class="small neg" style="margin-top:8px">'+esc(t('debts'))+' : '+esc(M(debts))+'</p>':'')+'</div>';
   }
+  K.push(h.length);
   var c=calcM(VM),over=c.left<0,base=c.income-c.fixed-c.m.saving;
   h+='<h3 class="sec">'+esc(t('budgetMonth'))+'<button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></h3>'+monthNav();
   h+='<section class="hero'+(over?' over':'')+'"><p class="eyebrow">'+esc(over?t('over'):t('left'))+'</p><div class="big">'+M2(Math.abs(c.left))+'</div>'+(base>0?bar(c.variable/base*100):'')+'<p class="eyebrow">'+esc(t('budgetOf'))+' '+esc(M(base))+' · '+esc(t('income'))+' '+esc(M(c.income))+' · '+esc(t('fixed'))+' '+esc(M(c.fixed))+'</p>';
   if(VM===ym(new Date())&&c.left>0){var dl=dim(VM)-new Date().getDate()+1;if(dl>0)h+='<p class="eyebrow" style="margin-top:6px">≈ '+esc(M(c.left/dl))+' '+esc(t('perDay'))+'</p>';}
   h+='</section>';
+  K.push(h.length);
   var dlv=(VM===ym(new Date()))?dim(VM)-new Date().getDate()+1:0;
   h+='<details class="card howcalc"><summary>'+esc(t('howCalc'))+'</summary><table style="margin-top:10px"><tr><td>'+esc(t('income'))+'</td><td>'+esc(M(c.income))+'</td></tr><tr><td>− '+esc(t('howFixed'))+'</td><td>'+esc(M(c.fixed))+'</td></tr><tr><td>− '+esc(t('savingGoal'))+'</td><td>'+esc(M(c.m.saving))+'</td></tr><tr><td><strong>= '+esc(t('budgetOf'))+'</strong></td><td><strong>'+esc(M(base))+'</strong></td></tr><tr><td>− '+esc(t('howVar'))+'</td><td>'+esc(M(c.variable))+'</td></tr><tr><td><strong>= '+esc(t('left'))+'</strong></td><td><strong>'+esc(M(c.left))+'</strong></td></tr></table><p class="small muted" style="margin-top:8px">'+esc(t('howNote'))+(dlv>0?' '+esc(t('howDay'))+' '+dlv+'.':'')+'</p></details>';
+  K.push(h.length);
   var envs=SPEND.filter(function(k){return S.env[k]>0;});
   if(envs.length)h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+esc(t('envelopes'))+'</h3><button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></div><p class="small muted" style="margin:4px 0 0">'+esc(t('envHelp'))+'</p>'+envs.map(function(k){var sp=c.by[k],lim=S.env[k],rest=lim-sp;return '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span style="font-weight:700">'+esc(M(lim))+'</span></div>'+bar(lim>0?sp/lim*100:0,sp>lim)+'<p class="small" style="margin:4px 0 0;display:flex;justify-content:space-between"><span class="muted">'+esc(t('envSpent'))+' '+esc(M(sp))+'</span><span class="'+(rest<0?'neg':'pos')+'">'+(rest<0?esc(t('envOver'))+' '+esc(M(-rest)):esc(t('envLeft'))+' '+esc(M(rest)))+'</span></p></div>';}).join('')+'</div>';
+  K.push(h.length);
   h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3><div class="grid2 catsum" style="margin:8px 0 4px"><button type="button" class="tile tap" data-a="goFlow" data-v="inc"><span class="eyebrow">'+esc(t('income'))+' ›</span><span class="val pos">'+esc(M(c.incAct))+'</span></button><button type="button" class="tile tap" data-a="goFlow" data-v="exp"><span class="eyebrow">'+esc(t('expenses'))+' ›</span><span class="val">'+esc(M(c.spentAll))+'</span></button></div>';
   if(c.spentAll<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
   else{
@@ -375,13 +409,17 @@ V.home=function(){
     h+='<p class="small muted" style="margin:12px 0 0">'+esc(t('catTap'))+'</p>';
   }
   h+='</div>';
+  K.push(h.length);
   var up=upcoming();
   h+='<h3 class="sec">'+esc(t('upcoming'))+'<button type="button" class="link" data-a="tab" data-v="recurring">'+esc(t('manage'))+'</button></h3>';
   h+=up.length?'<div class="card">'+up.map(function(u){return u.o?recRow(u.o,'valRec'):txRow(u.x,true);}).join('')+'</div>':'<div class="card flat"><p class="muted">'+esc(t('noUp'))+'</p></div>'+(function(){var n=nextRec();return n?'<div class="card" style="padding:4px 16px"><p class="small muted" style="margin:10px 0 0">'+esc(t('nextRec'))+'</p>'+recRow(n,'valRec')+'</div>':'';})();
+  K.push(h.length);
   var ss=sendSummary(c);
   h+='<div class="card"><h3>'+esc(t('sendCard'))+'</h3><div class="big" style="font-size:1.6rem">'+M2(c.sent)+'</div>'+(c.m.sendMax>0?rangeBar(c.sent,c.m.sendMin,c.m.sendMax)+'<p class="small muted">'+esc(t('range'))+' '+esc(M(c.m.sendMin))+' – '+esc(M(c.m.sendMax))+' · <span class="pill '+ss.cls+'">'+esc(t('st_'+ss.st))+'</span></p>':'')+'<button type="button" class="btn ghost" data-a="tab" data-v="send">'+esc(t('seeSend'))+'</button></div>';
+  K.push(h.length);
   h+=fbCard();
-  return h;
+  var P=[h.slice(0,K[0]),h.slice(K[0],K[1]),h.slice(K[1],K[2]),h.slice(K[2],K[3]),h.slice(K[3],K[4]),h.slice(K[4],K[5]),h.slice(K[5],K[6]),h.slice(K[6],K[7]),h.slice(K[7],K[8]),h.slice(K[8])];
+  return homeTop(c,over)+P[3]+'<button type="button" class="bigadd" data-a="addTx">+ '+esc(t('addBig'))+'</button>'+homeAlerts(c)+homeWeek()+P[5]+P[7]+'<details class="more"><summary>'+esc(t('vMore'))+'</summary>'+P[0]+P[1]+P[2]+P[4]+P[6]+P[8]+P[9]+'</details>';
 };
 V.goals=function(){
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px"><p class="muted" style="margin:0">'+esc(t('goalsIntro'))+'</p><button type="button" class="link" data-a="addGoal">+ '+esc(t('addGoal'))+'</button></div>';
@@ -734,18 +772,22 @@ function postField(mode,cat,val){
   return '<label class="f" for="s-post">'+esc(t(mode==='inc'?'incSource':'poste'))+'</label><select class="in" id="s-post" data-s="post"><option value="">'+esc(t('posteNone'))+'</option>'+body+'</select>';
 }
 function txForm(){
-  var tr=activeTrip(),h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc','tr'].map(function(m){return sfchip('mode',m,esc(t('m_'+m)));}).join('')+'</div>';
+  var tr=activeTrip(),full=!!(F.more||F.id||F.mode==='tr'),h='<div class="chips" style="margin:6px 0 4px">'+['exp','inc','tr'].map(function(m){return sfchip('mode',m,esc(t('m_'+m)));}).join('')+'</div>';
   h+='<label class="f" for="s-amt">'+esc(t('amount'))+'</label><input class="in amtbig" id="s-amt" data-s="amt" inputmode="decimal" placeholder="0" value="'+esc(F.amt)+'"><div class="chips" style="margin-top:8px">'+CURS.map(function(c){return sfchip('cur',c,curLabel(c));}).join('')+'</div>';
-  if(F.mode==='exp'){
-    h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div><p class="small muted" style="margin-top:6px">'+esc(t('h_'+F.cat))+'</p>'+postField('exp',F.cat,F.post);
-    if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>'+inp('s-fee','fee',t('feeF')+' ('+curSym(F.cur)+')','0','inputmode="decimal"');
+  if(F.mode==='exp')h+='<label class="f">'+esc(t('category'))+'</label><div class="chips">'+CATS.map(function(k){return sfchip('cat',k,CEMO[k]+' '+esc(t('c_'+k)),k==='family'?'gold':'');}).join('')+'</div><p class="small muted" style="margin-top:6px">'+esc(t('h_'+F.cat))+'</p>';
+  if(!full)h+='<div class="chips" style="margin-top:10px">'+chip('st','more',false,esc(t('moreOpt'))+' ▾')+'</div>';
+  if(full){
+    if(F.mode==='exp'){
+      h+=postField('exp',F.cat,F.post);
+      if(F.cat==='family')h+='<label class="f">'+esc(t('how'))+'</label><div class="chips">'+SUBS.map(function(s){return sfchip('sub',s,esc(t('s_'+s)));}).join('')+'</div>'+inp('s-fee','fee',t('feeF')+' ('+curSym(F.cur)+')','0','inputmode="decimal"');
+    }
+    if(F.mode==='inc')h+=postField('inc','',F.post);
+    if(F.mode==='tr')h+='<label class="f" for="s-acc">'+esc(t('fromAcc'))+'</label>'+accSelect('acc',F.acc,false)+'<label class="f" for="s-to">'+esc(t('toAcc'))+'</label>'+accSelect('to',F.to,false);
+    else h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true);
+    if(F.mode==='exp'&&tr)h+='<label class="f">'+esc(t('tripFor'))+' '+esc(tr.name)+'</label><div class="chips">'+chip('st','trip',!!F.trip,esc(t('tripToggle')))+'</div>'+(F.trip?'<div class="chips" style="margin-top:8px">'+['cash','card','momo'].map(function(p){return sfchip('pay',p,esc(t('p_'+p)));}).join('')+'</div>':'');
+    h+=inp('s-note','note',t('noteF'))+inp('s-date','date',t('dateF'),'','type="date"');
+    h+='<div class="chips" style="margin-top:12px">'+chip('st','pending',!!F.pending,esc(t('pendingOpt')))+'</div>';
   }
-  if(F.mode==='inc')h+=postField('inc','',F.post);
-  if(F.mode==='tr')h+='<label class="f" for="s-acc">'+esc(t('fromAcc'))+'</label>'+accSelect('acc',F.acc,false)+'<label class="f" for="s-to">'+esc(t('toAcc'))+'</label>'+accSelect('to',F.to,false);
-  else h+='<label class="f" for="s-acc">'+esc(t('account'))+'</label>'+accSelect('acc',F.acc,true);
-  if(F.mode==='exp'&&tr)h+='<label class="f">'+esc(t('tripFor'))+' '+esc(tr.name)+'</label><div class="chips">'+chip('st','trip',!!F.trip,esc(t('tripToggle')))+'</div>'+(F.trip?'<div class="chips" style="margin-top:8px">'+['cash','card','momo'].map(function(p){return sfchip('pay',p,esc(t('p_'+p)));}).join('')+'</div>':'');
-  h+=inp('s-note','note',t('noteF'))+inp('s-date','date',t('dateF'),'','type="date"');
-  h+='<div class="chips" style="margin-top:12px">'+chip('st','pending',!!F.pending,esc(t('pendingOpt')))+'</div>';
   return h+btnRow('saveTx',F.id?'delTx':'');
 }
 function delBox(){
@@ -801,6 +843,22 @@ function tripForm(){
 
 /* ---------- actions ---------- */
 var ACT={};
+ACT.guide=function(){F={g:1,inc:'',fix:'',sav:''};openSheet(t('gTitle'),guideForm);};
+ACT.gBack=function(){if(F.g>1){F.g--;redrawSheet();}};
+ACT.gDone=function(){closeSheet();TAB='home';render();window.scrollTo(0,0);};
+ACT.gNext=function(){
+  var f=['inc','fix','sav'][F.g-1],v=num(F[f]);
+  if(F.g===1&&v<=0){toast(t('errAmt'),true);return;}
+  if(F.g<3){F.g++;redrawSheet();return;}
+  var k=ym(new Date()),acct=S.accounts[0];
+  if(!acct){acct={id:uid(),name:t('gAcc'),type:'bank',cur:S.disp,open:0,since:ymd(new Date())};S.accounts.push(acct);}
+  function mk(type,name,amt,cat){return {id:uid(),type:type,name:name,amt:amt,cur:S.disp,day:1,from:k,to:'',cat:cat,sub:'',acc:acct.id,post:''};}
+  if(num(F.inc)>0)S.rec.push(mk('inc',t('gIncName'),num(F.inc),''));
+  if(num(F.fix)>0)S.rec.push(mk('exp',t('gFixName'),num(F.fix),'needs'));
+  mset(k).saving=toEur(num(F.sav),S.disp);
+  save();F.g=4;render();redrawSheet();
+};
+
 ACT.tab=function(v){TAB=v;UI.confirmReset=false;render();window.scrollTo(0,0);};
 ACT.goCat=function(k){TAB='tx';UI.tf='exp';UI.tc=k;render();window.scrollTo(0,0);};
 ACT.goFlow=function(f){TAB='tx';UI.tf=f;UI.tc='all';render();window.scrollTo(0,0);};

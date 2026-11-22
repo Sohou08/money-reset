@@ -1,6 +1,6 @@
 /* MONEY RESET service worker: network first, cache as fallback (lets the app open offline). */
-var CACHE='mr-shell-v202611222145';
-var SHELL=['./','index.html','style.css','app.js','i18n.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','icon.svg','apple-touch-icon.png',
+var CACHE='mr-shell-v202611222215';
+var SHELL=['./','index.html','style.css','app.js','i18n.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','icon.svg','apple-touch-icon.png','assets/doc-scan.webp','assets/doc-cheer.webp','assets/doc-worry.webp','assets/doc-wave.webp',
   'fonts/dm-sans-latin-400-normal.woff2','fonts/dm-sans-latin-500-normal.woff2','fonts/dm-sans-latin-700-normal.woff2','fonts/bricolage-grotesque-latin-500-normal.woff2','fonts/bricolage-grotesque-latin-700-normal.woff2'];
 self.addEventListener('install',function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){return Promise.all(SHELL.map(function(u){return c.add(u).catch(function(){});}));}).then(function(){return self.skipWaiting();}));

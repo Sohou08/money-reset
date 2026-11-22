@@ -302,3 +302,14 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .gate-main{order:5}
 .lp-masc{margin-top:22px;display:none}
 @media (min-width:900px){.gate-main{order:0}.lp-masc{display:block}}
+
+/* abonnement */
+.subbar{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--pri);background:#fff;border:1px solid var(--gold2);border-radius:14px;padding:10px 14px;margin:0 0 12px;cursor:pointer}
+.subbar.warn{border-color:var(--orange);color:#9a4d00}
+.subbar.bad{border:2px solid var(--orange);color:#9a4d00;font-weight:600}
+.subbar strong{white-space:nowrap}
+.plans{display:grid;gap:12px;grid-template-columns:1fr;margin-bottom:14px}
+.plans .plan{position:relative;margin:0}
+.plans .best{border:2px solid var(--gold2)}
+.plans .badge{position:absolute;top:-11px;right:14px;background:var(--orange);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
+@media (min-width:640px){.plans{grid-template-columns:1fr 1fr}}

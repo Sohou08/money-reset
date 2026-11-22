@@ -55,7 +55,7 @@ function api(path,opt,tok){
   return fetch(CFG.url+path,{method:opt.method||'GET',headers:h,body:opt.body?JSON.stringify(opt.body):undefined}).then(function(r){
     return r.text().then(function(tx){var j=null;try{j=tx?JSON.parse(tx):null;}catch(e){}if(!r.ok)throw {status:r.status,body:j};return j;});});
 }
-function setSession(j){AUTH.session={access:j.access_token,refresh:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user&&j.user.id,email:j.user&&j.user.email};authSave();}
+function setSession(j){AUTH.session={access:j.access_token,refresh:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user&&j.user.id,email:j.user&&j.user.email,created:(j.user&&j.user.created_at)||(AUTH.session&&AUTH.session.created)||''};authSave();}
 function token(){
   if(!AUTH.session)return Promise.reject(new Error('nosession'));
   if(Date.now()<AUTH.session.exp)return Promise.resolve(AUTH.session.access);
@@ -333,7 +333,7 @@ function dlong(s){return new Intl.DateTimeFormat(loc(),{weekday:'long',day:'nume
 
 /* ---------- view state ---------- */
 var VM=ym(new Date()),TAB='home',F=null,SH=null;
-var SUBTABS=['more','tx','recurring','trips','review','settings','guide'];
+var SUBTABS=['more','tx','recurring','trips','review','settings','guide','sub'];
 var UI={per:'1m',tf:'all',tc:'all',sv:'bilan',span:1,sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
 var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
@@ -486,13 +486,65 @@ function sendAlert(c){
   var wants=S.sendAlloc==='wants',a=r3sum([VM]),base=a.inc>0?a.inc:a.used,R=ruleFor(VM),share=wants?a.w:a.n,tgt=wants?R.w:R.n;
   return '<div class="note bad"><p><strong>'+esc(t('alertSendT'))+'</strong></p><p class="small" style="margin:0 0 4px">'+esc(t('alertSendA'))+' '+esc(M(sent))+' · '+esc(t('alertSendB'))+' '+esc(M(max))+' (+'+esc(M(sent-max))+').</p>'+(base>0?'<p class="small" style="margin:0">'+esc(t(wants?'ruleW':'ruleN'))+' : '+pct(share,base)+' % '+esc(t('alertVs'))+' '+tgt+' %.</p>':'')+'</div>';
 }
+/* ---------- abonnement : essai gratuit 1 mois, puis abonnement ---------- */
+var SUB_LAUNCH='2026-11-23',TRIAL_DAYS=30;
+function subPrice(){return {m:CFG.priceM||4.99,y:CFG.priceY||39};}
+function trialStart(){
+  if(AUTH.session&&AUTH.session.created){var c=String(AUTH.session.created).slice(0,10);return c>SUB_LAUNCH?c:SUB_LAUNCH;}
+  var v=null;try{v=localStorage.getItem('moneyreset.trial');}catch(e){}
+  if(!v||v<SUB_LAUNCH){v=ymd(new Date());if(v<SUB_LAUNCH)v=SUB_LAUNCH;try{localStorage.setItem('moneyreset.trial',v);}catch(e){}}
+  return v;
+}
+function subInfo(){
+  var dev=null;try{dev=localStorage.getItem('moneyreset.devsub');}catch(e){}
+  var st=trialStart(),sd=pd(st),end=new Date(sd.getFullYear(),sd.getMonth(),sd.getDate()+TRIAL_DAYS),now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var days=Math.ceil((end-t0)/864e5),sub=S.sub||{};
+  var active=sub.status==='active'&&(!sub.end||sub.end>=ymd(now));
+  var state=dev==='active'||active?'active':(dev==='expired'?'expired':(dev==='trial'||days>0?'trial':'expired'));
+  if(dev==='expired')days=0;
+  return {state:state,days:Math.max(0,days),end:ymd(end),endD:end,plan:sub.plan||'',next:sub.end||''};
+}
+function isLocked(){return subInfo().state==='expired';}
+var LOCKED={addMenu:1,addTx:1,editTx:1,saveTx:1,delTx:1,valRec:1,valRecGo:1,addAcc:1,editAcc:1,saveAcc:1,delAcc:1,delAccDo:1,addDiff:1,addGoal:1,editGoal:1,saveGoal:1,delGoal:1,goalAdd:1,saveDep:1,addRec:1,editRec:1,saveRec:1,delRec:1,editEnv:1,saveEnv:1,addTrip:1,saveTrip:1,toggleTrip:1,delTrip:1,editRange:1,saveRange:1,addSend:1,projApply:1,useSugg:1,addItem:1,delItem:1,saveRefl:1,restoreBk:1,impOpen:1,impGo:1,impSel:1,editObj:1,saveObj:1,addEvt:1,editEvt:1,saveEvt:1,delEvt:1,loadDemo:1,clearDemo:1};
+function subBanner(){
+  var i=subInfo();if(i.state==='active')return '';
+  if(i.state==='expired')return '<button type="button" class="subbar bad" data-a="tab" data-v="sub"><span>🔒 '+esc(t('subExpBar'))+'</span><strong>'+esc(t('subSee'))+' ›</strong></button>';
+  var soon=i.days<=7;
+  return '<button type="button" class="subbar'+(soon?' warn':'')+'" data-a="tab" data-v="sub"><span>'+(soon?'⏳ ':'🎁 ')+esc(t('subTrialBar').replace('{n}',i.days))+'</span><strong>'+esc(t('subSee'))+' ›</strong></button>';
+}
+V.sub=function(){
+  var i=subInfo(),P=subPrice(),h='';
+  if(i.state==='active'){
+    h+='<div class="card"><h3>✅ '+esc(t('subActive'))+'</h3><p class="small" style="margin:6px 0 0">'+esc(t(i.plan==='y'?'subPlanY':'subPlanM'))+(i.next?' · '+esc(t('subNext'))+' '+esc(dfmt(i.next)):'')+'</p>'+
+      '<button type="button" class="btn ghost full" data-a="subManage" style="margin-top:12px">'+esc(t('subManage'))+'</button></div>';
+  }else{
+    var pc=Math.max(0,Math.min(100,(TRIAL_DAYS-i.days)/TRIAL_DAYS*100));
+    h+='<div class="card"><h3>'+(i.state==='expired'?'🔒 '+esc(t('subExpT')):'🎁 '+esc(t('subTrialT')))+'</h3>'+
+      '<p class="small" style="margin:6px 0 8px">'+esc(i.state==='expired'?t('subExpD'):t('subTrialD').replace('{n}',i.days).replace('{d}',dfmt(ymd(i.endD))))+'</p>'+(i.state==='trial'?bar(pc,i.days<=7):'')+'</div>';
+    h+='<div class="plans"><div class="card plan"><p class="eyebrow">'+esc(t('subPlanM'))+'</p><div class="big">'+esc(fmt(P.m,'EUR'))+'<span class="muted small"> '+esc(t('subPerMonth'))+'</span></div><p class="small muted">'+esc(t('subMDesc'))+'</p><button type="button" class="btn full" data-a="subGo" data-v="m">'+esc(t('subGo'))+'</button></div>'+
+      '<div class="card plan best"><span class="badge">'+esc(t('subBest'))+' −'+Math.round((1-P.y/(P.m*12))*100)+' %</span><p class="eyebrow">'+esc(t('subPlanY'))+'</p><div class="big">'+esc(fmt(P.y,'EUR'))+'<span class="muted small"> '+esc(t('subPerYear'))+'</span></div><p class="small muted">≈ '+esc(fmt(P.y/12,'EUR'))+' '+esc(t('subPerMonth'))+'</p><button type="button" class="btn full" data-a="subGo" data-v="y">'+esc(t('subGo'))+'</button></div></div>';
+    if(S.subInterest)h+='<div class="note"><p class="small" style="margin:0">✓ '+esc(t('subInterest'))+'</p></div>';
+  }
+  h+='<div class="card"><h3>'+esc(t('subIncT'))+'</h3><ul class="small" style="padding-left:18px;margin:6px 0 0">'+[1,2,3,4,5,6].map(function(n){return '<li style="margin:3px 0">'+esc(t('subInc'+n))+'</li>';}).join('')+'</ul></div>';
+  h+='<div class="card"><h3>'+esc(t('subFairT'))+'</h3><p class="small" style="margin:6px 0 0">'+esc(t('subFair'))+'</p><button type="button" class="btn ghost full" data-a="tab" data-v="settings" style="margin-top:10px">'+esc(t('subData'))+'</button></div>';
+  return h;
+};
+ACT.paywall=function(){openSheet(t('subExpT'),function(){return '<p>'+esc(t('subPayD'))+'</p><button type="button" class="btn full" data-a="subSee">'+esc(t('subSee'))+'</button><button type="button" class="btn ghost full" data-a="closeSheet" style="margin-top:8px">'+esc(t('close'))+'</button>';});};
+ACT.subSee=function(){closeSheet();ACT.tab('sub');};
+ACT.subGo=function(v){
+  if(cloud()&&!AUTH.session){AUTH.guest=false;try{localStorage.removeItem('moneyreset.guest');}catch(e){}AUTH.mode='up';AUTH.msg='';toast(t('subNeedAcc'));render();return;}
+  var url=v==='y'?CFG.payYearly:CFG.payMonthly;
+  if(url){var u=url+(url.indexOf('?')<0?'?':'&')+'client_reference_id='+encodeURIComponent((AUTH.session&&AUTH.session.uid)||'')+(AUTH.session&&AUTH.session.email?'&prefilled_email='+encodeURIComponent(AUTH.session.email):'');window.open(u,'_blank','noopener');return;}
+  S.subInterest=v;save();toast(t('subSoon'));render();
+};
+ACT.subManage=function(){if(CFG.portalUrl){window.open(CFG.portalUrl,'_blank','noopener');return;}toast(t('subManageSoon'));};
 function topCard(){
   if(!S.demo&&!S.tx.length&&!S.accounts.length&&!S.rec.length)return '<section class="card"><div class="masc-row">'+MASC(96,'scan')+'<p class="bubble">'+esc(t('mascHi'))+'</p></div><h3>'+esc(t('welcomeT'))+'</h3><p class="muted">'+esc(t('welcomeP'))+'</p><ol class="small" style="padding-left:18px;margin:8px 0"><li>'+esc(t('welcome1'))+'</li><li>'+esc(t('welcome2'))+'</li><li>'+esc(t('welcome3'))+'</li></ol><button type="button" class="btn full" data-a="impOpen">'+esc(t('impBtn'))+'</button><button type="button" class="btn ghost full" data-a="addTx">'+esc(t('welcomeManual'))+'</button></section>';
   return '<section class="card"><div class="masc-row">'+MASC(48,'scan')+'<h3 style="margin:0">'+esc(t('addTop'))+'</h3></div><div class="addpair"><button type="button" class="btn" data-a="impOpen"><span aria-hidden="true">📄</span> '+esc(t('impBtn'))+'</button><button type="button" class="btn alt" data-a="addTx"><span aria-hidden="true">✍️</span> '+esc(t('manualBtn'))+'</button></div></section>';
 }
 V.home=function(){
   var nw=nwAt(null),ser=nwSeries(UI.per),delta=ser.length>1?ser[ser.length-1].v-ser[0].v:0;
-  var h=topCard()+remindBox();
+  var h=subBanner()+topCard()+remindBox();
   h+='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
     '<div class="chips sm">'+['1m','3m','6m','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
   var upto=VM<ym(new Date())?VM+'-'+('0'+dim(VM)).slice(-2):null,mname=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+VM.slice(0,4),+VM.slice(5,7)-1,1));
@@ -939,7 +991,7 @@ V.send=function(){
     '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+'';
 };
 V.more=function(){
-  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['guide','📚'],['settings','⚙️']];
+  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['guide','📚'],['sub','💳'],['settings','⚙️']];
   return '<div class="card" style="padding:4px 16px">'+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
 };
 V.recurring=function(){
@@ -1029,7 +1081,7 @@ V.gate=function(){
     '<div class="lp-tag">'+esc(t('lpTag'))+'</div><h1 class="lp-h">'+esc(t('lpH'))+'</h1><p class="lp-sub">'+esc(t('lpSub'))+'</p>'+
     '<div class="lp-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button><button type="button" class="btn ghost" data-a="guest">'+esc(t('lpCta2'))+'</button></div>'+
     '<p class="small lp-have"><button type="button" class="link" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></p>'+
-    '<div class="lp-pills">'+['lpP1','lpP2','lpP3'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div><div class="lp-masc">'+MASC(150,'wave')+'</div></header>';
+    '<div class="lp-pills">'+['lpP0','lpP1','lpP2','lpP3'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div><div class="lp-masc">'+MASC(150,'wave')+'</div></header>';
   var feat='<section class="lp-feat"><h2>'+esc(t('lpFeatT'))+'</h2><div class="lp-grid">'+F6.map(function(f){return '<div class="lp-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
   var how='<section class="lp-how"><h2>'+esc(t('lpHowT'))+'</h2><ol>'+[1,2,3].map(function(n){return '<li><span class="n">'+n+'</span><div><strong>'+esc(t('lpS'+n+'T'))+'</strong><p>'+esc(t('lpS'+n+'D'))+'</p></div></li>';}).join('')+'</ol><p class="small muted" style="margin:14px 0 0">📱💻 '+esc(t('lpDev'))+'</p></section>';
   var priv='<section class="lp-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p><p class="small muted" style="margin:8px 0 0">'+esc(t('lpDisc'))+'</p></div></section>';
@@ -1946,7 +1998,7 @@ var FIELD={
   sendMax:function(el){mset(VM).sendMax=readEur(el);}
 };
 SENDS.forEach(function(s){FIELD['plan_'+s]=function(el){var m=mset(VM);m.plan=m.plan||{};m.plan[s]=readEur(el);};});
-document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var f=ACT[b.getAttribute('data-a')];if(f)f(b.getAttribute('data-v'),b);});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var nm=b.getAttribute('data-a'),f=ACT[nm];if(LOCKED[nm]&&isLocked()){ACT.paywall();return;}if(f)f(b.getAttribute('data-v'),b);});
 function sheetField(el){if(F&&el.hasAttribute('data-s'))F[el.getAttribute('data-s')]=el.value;}
 function setRule(key,val){
   var R=S.rule,nr={n:R.n,w:R.w,s:R.s},v=Math.max(0,Math.min(100,Math.round(num(val)||0))),o=['n','w','s'].filter(function(k){return k!==key;}),rest=100-v,so=nr[o[0]]+nr[o[1]];
@@ -1965,7 +2017,7 @@ document.addEventListener('input',function(e){
   var el=e.target;sheetField(el);
   if(el.hasAttribute('data-sim')&&UI.sim){UI.sim[el.getAttribute('data-sim')]=el.value;var so=$('simout');if(so)so.innerHTML=simOut();return;}
   if(el.id==='est-in'){var o=$('est-out');if(o)o.textContent='≈ '+fcfa(toEur(num(el.value),S.disp));return;}
-  if(TAB==='send'&&!SH)applyField(el);
+  if(TAB==='send'&&!SH&&!isLocked())applyField(el);
 });
 document.addEventListener('change',function(e){
   var el=e.target;

@@ -255,6 +255,3 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .irow .irec input{width:18px;height:18px}
 .repbtn{display:flex;justify-content:space-between;width:100%;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
 .repdet{margin:8px 0 4px;padding:8px 12px;background:var(--soft);border-radius:12px}
-
-.mblock{break-inside:avoid;display:block}
-.mblock .sec:first-child{margin-top:0}

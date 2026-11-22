@@ -220,23 +220,42 @@ function calcM(k){
   return {m:m,tx:tx,income:income,fixed:fixed,by:by,variable:variable,spentAll:sum(exps,function(x){return x.eur;}),incAct:sum(tx.filter(function(x){return x.type==='inc';}),function(x){return x.eur;}),sent:sum(sends,function(x){return x.eur;}),types:types,budget:budget,left:budget-variable};
 }
 function sendTotals(k){var o={tot:0};SENDS.forEach(function(x){o[x]=0;});S.tx.forEach(function(x){if(x.type==='exp'&&x.cat==='family'&&SENDS.indexOf(x.sub)>=0&&x.date.slice(0,7)===k){o[x.sub]+=x.eur;o.tot+=x.eur;}});return o;}
+function projShares(P,k){
+  var now=ym(new Date()),out=[],items=[];
+  S.goals.forEach(function(g){var rem=Math.max(0,toEur(g.target-g.current,g.cur));if(rem<=0)return;var lm=g.date?Math.max(1,monthsBetween(now,g.date)):0;items.push({g:g,rem:rem,lm:lm,need:lm?rem/lm:rem,cur:toEur(g.monthly||0,g.cur)});});
+  items.sort(function(a,b){return (a.lm||9999)-(b.lm||9999);});
+  var room=P;
+  items.forEach(function(x){
+    if(room<=0)return;
+    var want=Math.max(0,x.need-x.cur),give=Math.min(room,want>0?want:room/Math.max(1,1));
+    if(!(want>0))return;
+    give=Math.floor(Math.min(room,want));if(give<=0)return;
+    room-=give;
+    var mNew=x.cur+give,mm=Math.ceil(x.rem/mNew),mo=x.cur>0?Math.ceil(x.rem/x.cur):0,base=new Date();
+    out.push({g:x.g,share:give,newReach:new Date(base.getFullYear(),base.getMonth()+mm,1),oldReach:mo?new Date(base.getFullYear(),base.getMonth()+mo,1):null,months:mm});
+  });
+  return {list:out,rest:room,has:items.length>0};
+}
 function suggest(k){
-  var c=calcM(k),d=splitData(c,k),m=c.m,base=d.base,left=d.left,sent=c.sent,afford=Math.max(0,sent+left);
+  var c=calcM(k),d=splitData(c,k),m=c.m,base=d.base,left=d.left,sent=c.sent;
   var rec=sum(recOcc(k).filter(function(o){return o.r.type==='exp'&&o.r.cat==='family';}),function(o){return eurOf(o.r);});
   var past=[],p=k.split('-'),i,v;
   for(i=1;i<=6&&past.length<3;i++){v=sendTotals(ym(new Date(+p[0],+p[1]-1-i,1))).tot;if(v>0)past.push(v);}
-  var typical=past.length?sum(past,function(x){return x;})/past.length:sent;
-  var hasR=m.sendMax>0,mode,sMax,extra=0;
-  if(left<0){mode='deficit';sMax=hasR?Math.min(m.sendMax,afford):afford;}
-  else if(!hasR){mode='new';sMax=Math.min(afford,typical>0?typical*1.1:base*0.15);}
-  else if(sent>m.sendMax){mode='over';sMax=m.sendMax;}
-  else if(m.sendMax>afford){mode='toohigh';sMax=afford;}
-  else if(left>0){mode='room';extra=Math.min(left/2,m.sendMax*0.25);sMax=Math.min(afford,m.sendMax+extra);}
-  else{mode='tight';sMax=m.sendMax;}
-  sMax=Math.max(0,Math.floor(sMax/5)*5);
+  var hasR=m.sendMax>0,mode,add=0,projP=0,free=0;
+  if(left<0)mode='deficit';
+  else if(hasR&&sent>m.sendMax)mode='over';
+  else if(left>=5)mode='add';
+  else mode='none';
+  if(mode==='add'||mode==='over'){
+    add=mode==='add'?Math.floor(left*0.2/5)*5:0;
+    projP=Math.floor(left*0.6/5)*5;
+    free=Math.max(0,left-add-projP);
+  }
+  var sMax=Math.max(0,Math.floor((sent+add)/5)*5);
+  if(mode==='over')sMax=m.sendMax;
   var sMin=hasR?m.sendMin:(rec>0?rec:(past.length?Math.min.apply(null,past):0));
   sMin=Math.min(sMin,sMax);
-  return {min:sMin,max:sMax,mode:mode,base:base,left:left,sent:sent,afford:afford,extra:extra,typical:typical,remain:Math.max(0,sMax-sent),deficit:left<0?-left:0,curMax:m.sendMax||0,hasPast:past.length>0,fromRec:rec>0};
+  return {min:sMin,max:sMax,mode:mode,base:base,left:left,sent:sent,add:add,projP:projP,free:free,remain:Math.max(0,sMax-sent),deficit:left<0?-left:0,curMax:m.sendMax||0,over:hasR?sent-m.sendMax:0,proj:projShares(projP,k),fromRec:rec>0,hasPast:past.length>0};
 }
 function sendSplit(k,total){
   var acc0={},t0=0,p=k.split('-'),i,n=0,o;
@@ -314,7 +333,7 @@ function dlong(s){return new Intl.DateTimeFormat(loc(),{weekday:'long',day:'nume
 
 /* ---------- view state ---------- */
 var VM=ym(new Date()),TAB='home',F=null,SH=null;
-var SUBTABS=['more','tx','recurring','trips','review','settings'];
+var SUBTABS=['more','tx','recurring','trips','review','settings','guide'];
 var UI={per:'1m',tf:'all',tc:'all',sv:'bilan',span:1,sel:null,focus:'',confirmReset:false,restoreMsg:'',csv:'',lastCur:'EUR',fcat:'needs'};
 var toastTimer=null;
 function toast(msg,bad){var el=$('toast');el.textContent=msg;el.className='on'+(bad?' bad':'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='';},2200);}
@@ -850,7 +869,7 @@ function bilanView(){
   if(c.spentAll>0)h+='<div class="card"><h3>'+esc(t('byCat'))+'</h3><div class="donutwrap">'+donut(c.by,c.spentAll)+'<div class="legend" style="flex-direction:column;flex:1;min-width:140px">'+CATS.filter(function(k){return c.by[k]>0;}).map(function(k){return '<span><i style="background:'+CCOL[k]+'"></i>'+esc(t('c_'+k))+' · '+esc(M(c.by[k]))+'</span>';}).join('')+'</div></div></div>';
   var top=c.tx.filter(function(x){return x.type==='exp';}).sort(function(x,y){return y.eur-x.eur;}).slice(0,5);
   if(top.length)h+='<div class="card" style="padding:12px 16px"><h3>'+esc(t('topExp'))+'</h3>'+top.map(function(x){return txRow(x,true);}).join('')+'</div>';
-  h+='<div class="card"><h3>'+esc(t('q4'))+'</h3><textarea class="in" id="r-text" placeholder="'+esc(t('reflPh'))+'">'+esc(c.m.reflection)+'</textarea><button type="button" class="btn full" data-a="saveRefl">'+esc(t('saveRefl'))+'</button></div>';
+  h+='<div class="card"><h3>'+esc(t('q4'))+'</h3><textarea class="in" id="r-text" placeholder="'+esc(t('reflPh'))+'">'+esc(c.m.reflection)+'</textarea><button type="button" class="btn full" data-a="saveRefl">'+esc(t('saveRefl'))+'</button><button type="button" class="btn ghost full" data-a="tab" data-v="guide" style="margin-top:8px">📚 '+esc(t('guideLink'))+'</button></div>';
   return h+ruleEditor();
 }
 function globalView(){
@@ -897,9 +916,16 @@ function sumSend(){
   else{
     var sp=sendSplit(VM,sg.max),rp=function(str,o){Object.keys(o).forEach(function(q){str=str.split('{'+q+'}').join(o[q]);});return str;};
     h+='<table><tr><td>'+esc(t('suggMin'))+'</td><td>'+M2(sg.min)+'</td></tr><tr><td>'+esc(t('suggMax'))+'</td><td>'+M2(sg.max)+'</td></tr></table>'+
-      '<p class="small" style="margin:10px 0 0">'+esc(rp(t('suggMode_'+sg.mode),{left:M(sg.left),extra:M(sg.extra),max:M(sg.curMax),sent:M(sg.sent),typ:M(sg.typical),afford:M(sg.afford),sug:M(sg.max),def:M(sg.deficit),over:M(sg.sent-sg.curMax)}))+'</p>'+
-      (sg.remain>0?'<p class="small" style="margin:6px 0 0">'+esc(t('suggRemain'))+' <strong>'+esc(M(sg.remain))+'</strong> <span class="muted">· '+esc(fcfa(sg.remain))+'</span></p>':'')+
-      '<p class="small muted" style="margin:6px 0 0">'+esc(t('suggCeil'))+' '+esc(M(sg.afford))+'</p>';
+      '<p class="small" style="margin:10px 0 0">'+esc(rp(t('suggMode_'+sg.mode),{left:M(sg.left),add:M(sg.add),max:M(sg.curMax),over:M(sg.over),def:M(sg.deficit),sug:M(sg.max)}))+'</p>';
+    if(sg.mode==='add'||sg.mode==='over'){
+      h+='<p class="small" style="margin:10px 0 4px"><strong>'+esc(t('suggSplitT'))+' ('+esc(M(sg.left))+')</strong></p>'+
+        '<p class="small" style="margin:2px 0">🌍 '+esc(t('suggToSend'))+' : <strong>'+esc(M(sg.add))+'</strong></p>'+
+        '<p class="small" style="margin:2px 0">🎯 '+esc(t('suggToProj'))+' : <strong>'+esc(M(sg.projP))+'</strong></p>'+
+        '<p class="small" style="margin:2px 0">🍜 '+esc(t('suggToFree'))+' : <strong>'+esc(M(sg.free))+'</strong></p>';
+      if(sg.proj.has&&sg.proj.list.length){
+        h+='<div class="note" style="margin-top:10px"><p class="small" style="margin:0 0 4px"><strong>'+esc(t('suggProjT'))+'</strong></p>'+sg.proj.list.map(function(x){return '<p class="small" style="margin:3px 0">'+esc(x.g.emoji||'🎯')+' '+esc(x.g.name)+' : +'+esc(M(x.share))+' / '+esc(t('perMonth'))+' → '+esc(t('suggReach'))+' <strong>'+esc(new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(x.newReach))+'</strong>'+(x.oldReach?' <span class="muted">('+esc(t('suggBefore'))+' '+esc(new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(x.oldReach))+')</span>':'')+'</p>';}).join('')+'<button type="button" class="btn ghost full" data-a="projApply" style="margin-top:8px">'+esc(t('suggProjApply'))+'</button></div>';
+      }else if(!sg.proj.has)h+='<p class="small muted" style="margin:8px 0 0">'+esc(t('suggNoProj'))+'</p>';
+    }
     if(sg.max>0)h+='<p class="small" style="margin:10px 0 4px"><strong>'+esc(t('suggSplit'))+'</strong></p>'+SENDS.filter(function(x){return sp[x]>0;}).map(function(x){return '<p class="small" style="margin:2px 0">'+esc(t('sn_'+x))+' : '+esc(M(sp[x]))+' <span class="muted">· '+esc(fcfa(sp[x]))+'</span></p>';}).join('');
     var applied=(m.sendMin===sg.min&&m.sendMax===sg.max);
     h+='<button type="button" class="btn full" data-a="useSugg" style="margin-top:10px">'+esc(t(applied?'suggUsed':'useSugg'))+'</button></div>';
@@ -913,7 +939,7 @@ V.send=function(){
     '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+'';
 };
 V.more=function(){
-  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['settings','⚙️']];
+  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['guide','📚'],['settings','⚙️']];
   return '<div class="card" style="padding:4px 16px">'+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
 };
 V.recurring=function(){
@@ -921,6 +947,21 @@ V.recurring=function(){
   if(!S.rec.length)return h+'<div class="card flat"><p class="muted">'+esc(t('noRec'))+'</p></div>';
   h+='<div class="card" style="padding:4px 16px">'+S.rec.map(function(r){var emo=r.type==='inc'?'💰':(CEMO[r.cat]||'🔁');
     return '<button type="button" class="row" data-a="editRec" data-v="'+r.id+'"><span class="ico">'+emo+'</span><span class="mid"><span class="t">'+esc(r.name)+'</span><span class="muted small">'+esc(t('everyMonth'))+' '+r.day+(r.from?' · '+esc(t('recSince'))+' '+esc(mlabel(r.from)):'')+(r.to?' → '+esc(mlabel(r.to)):'')+'</span></span><span class="amt '+(r.type==='inc'?'pos':'')+'">'+(r.type==='inc'?'+':'−')+esc(fmt(r.amt,r.cur))+'</span></button>';}).join('')+'</div>';
+  return h;
+};
+function guideCountry(){var g=window.GUIDE||{};return g[S.country]?S.country:'FR';}
+V.guide=function(){
+  var G=window.GUIDE||{},cc=guideCountry(),C=G[cc],L=S.lang==='en'?'en':'fr',h='';
+  h+='<div class="note"><p class="small" style="margin:0"><strong>'+esc(t('gdDisc'))+'</strong></p></div>';
+  h+='<div class="card"><label class="f" for="g-c" style="margin-top:0">'+esc(t('gdCountry'))+'</label><select class="in" id="g-c" data-gc="1">'+
+    [['eu','gdEu'],['en','gdEn']].map(function(r){return '<optgroup label="'+esc(t(r[1]))+'">'+Object.keys(G).filter(function(k){return G[k].reg===r[0];}).map(function(k){return '<option value="'+k+'"'+(k===cc?' selected':'')+'>'+G[k].flag+' '+esc(G[k][L])+'</option>';}).join('')+'</optgroup>';}).join('')+'</select></div>';
+  h+='<div class="card"><h3>'+esc(t('gdBeforeT'))+'</h3><ol class="small" style="padding-left:18px;margin:6px 0 0">'+[1,2,3,4,5,6].map(function(n){return '<li style="margin:3px 0">'+esc(t('gdB'+n))+'</li>';}).join('')+'</ol></div>';
+  [['safe','gdSafe'],['bal','gdBal'],['grow','gdGrow'],['ret','gdRet'],['real','gdReal']].forEach(function(sc){
+    var its=C.sec[sc[0]];if(!its||!its.length)return;
+    h+='<div class="card"><h3 style="margin-bottom:2px">'+esc(t(sc[1]))+'</h3><p class="small muted" style="margin:0 0 6px">'+esc(t(sc[1]+'H'))+'</p>'+its.map(function(i){return '<div style="padding:8px 0;border-top:1px solid var(--line)"><strong>'+esc(i.n)+'</strong><p class="small" style="margin:2px 0 0">'+esc(i[L])+'</p></div>';}).join('')+'</div>';
+  });
+  h+='<div class="card"><h3>'+esc(t('gdSrc'))+' · '+C.flag+' '+esc(C[L])+'</h3><p class="small muted" style="margin:0 0 6px">'+esc(t('gdSrcH'))+'</p>'+C.src.map(function(r){return '<p style="margin:4px 0"><a href="'+esc(r[1])+'" target="_blank" rel="noopener">'+esc(r[0])+' ↗</a></p>';}).join('')+'</div>';
+  h+='<div class="note"><p class="small" style="margin:0">'+esc(t('gdCrypto'))+'</p></div>';
   return h;
 };
 V.trips=function(){
@@ -943,7 +984,7 @@ V.review=function(){
   h+='<div class="card"><h3>'+esc(t('q2'))+'</h3><table><tr><td>'+esc(t('q2goal'))+'</td><td>'+M2(m.saving)+'</td></tr><tr><td>'+esc(t('q2real'))+'</td><td class="'+(real>=m.saving?'pos':'neg')+'">'+M2(real)+'</td></tr></table></div>';
   h+='<div class="card"><h3>'+esc(t('q3'))+'</h3><table>'+CATS.map(function(k){return '<tr><td>'+CEMO[k]+' '+esc(t('c_'+k))+'</td><td>'+esc(M(c.by[k]))+'</td></tr>';}).join('')+'<tr><td><strong>'+esc(t('expenses'))+'</strong></td><td><strong>'+esc(M(c.spentAll))+'</strong></td></tr></table>'+
     '<p style="margin-top:10px">'+esc(t('sendsVs'))+' : <strong>'+esc(M(c.sent))+'</strong> · '+esc(t('range'))+' '+esc(M(m.sendMin))+' – '+esc(M(m.sendMax))+' <span class="pill '+ss.cls+'">'+esc(t('st_'+ss.st))+'</span></p></div>';
-  h+='<div class="card"><h3>'+esc(t('q4'))+'</h3><textarea class="in" id="r-text" placeholder="'+esc(t('reflPh'))+'">'+esc(m.reflection)+'</textarea><button type="button" class="btn full" data-a="saveRefl">'+esc(t('saveRefl'))+'</button></div>';
+  h+='<div class="card"><h3>'+esc(t('q4'))+'</h3><textarea class="in" id="r-text" placeholder="'+esc(t('reflPh'))+'">'+esc(m.reflection)+'</textarea><button type="button" class="btn full" data-a="saveRefl">'+esc(t('saveRefl'))+'</button><button type="button" class="btn ghost full" data-a="tab" data-v="guide" style="margin-top:8px">📚 '+esc(t('guideLink'))+'</button></div>';
   return h;
 };
 V.settings=function(){
@@ -1287,6 +1328,7 @@ ACT.saveRange=function(){
   var m=mset(VM);m.sendMin=toEur(mn,S.disp);m.sendMax=toEur(mx,S.disp);save();closeSheet();render();toast(t('saved'));
 };
 ACT.addSend=function(){ACT.addTx();F.mode='exp';F.cat='family';F.date=(VM===ym(new Date()))?ymd(new Date()):VM+'-01';redrawSheet();};
+ACT.projApply=function(){var sg=suggest(VM);sg.proj.list.forEach(function(x){var g=S.goals.filter(function(y){return y.id===x.g.id;})[0];if(g)g.monthly=(g.monthly||0)+fromEur(x.share,g.cur);});save();render();toast(t('suggProjDone'));};
 ACT.useSugg=function(){var sg=suggest(VM),m=mset(VM);m.sendMin=sg.min;m.sendMax=sg.max;m.plan=sendSplit(VM,sg.max);save();render();toast(t('suggApplied'));};
 ACT.addItem=function(v){S[v].push({id:uid(),name:'',amt:0,cur:'EUR'});save();render();var els=document.querySelectorAll('[data-l="'+v+'"][data-p="name"]');if(els.length)els[els.length-1].focus();};
 ACT.delItem=function(v){var p=v.split(':');S[p[0]]=S[p[0]].filter(function(i){return i.id!==p[1];});save();render();};
@@ -1883,6 +1925,7 @@ document.addEventListener('change',function(e){
     if(r){var kk=el.getAttribute('data-k');if(kk==='on'){r.on=el.checked;redrawSheet();}else if(kk==='rec'){r.rec=el.checked;r.recSet=true;}else if(kk==='post'){r.post=el.value;r.postSet=true;}else{r.cat=el.value;r.post='';var pg0=postGuess(norm(r.label));if(pg0&&pg0.cat===el.value)r.post=pg0.post;r.known=true;if(el.value==='family'&&!r.sub)r.sub='mobile';r.remit=r.remit||el.value==='family';redrawSheet();}}
     return;
   }
+  if(el.hasAttribute('data-gc')){S.country=el.value;save();render();return;}
   if(el.hasAttribute('data-ui')){UI[el.getAttribute('data-ui')]=el.value;render();return;}
   if(el.hasAttribute('data-ms')&&F){msChange(el);return;}
   if(el.hasAttribute('data-rule')){setRule(el.getAttribute('data-rule'),el.value);return;}

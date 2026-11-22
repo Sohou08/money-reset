@@ -4,7 +4,7 @@ var XOF=655.957,KEY='moneyreset.v2';
 var SPEND=['needs','wants','culture','extra','family'];
 var CATS=SPEND.concat(['save','invest']);
 var CEMO={needs:'🛒',wants:'🍜',culture:'🎭',extra:'⚡',family:'🌍',save:'🐷',invest:'📈',inc:'💰',tr:'🔁'};
-var CCOL={needs:'#3F7D6B',wants:'#D2693E',culture:'#7C6BB5',extra:'#5B7DB1',family:'#C9972B',save:'#4C9AA8',invest:'#8E5BA8'};
+var CCOL={needs:'#2F6FB0',wants:'#F28C28',culture:'#7C6BB5',extra:'#4FA3C7',family:'#E8B23A',save:'#1F9E7A',invest:'#8E5BA8'};
 var SENDS=['mobile','bank','cash'],SUBS=['mobile','bank','cash','other'];
 var POSTG={
   needs:[['g_housing',['rent','charges','mobile','homeIns','energy','internet']],['g_taxes',['taxIncome','taxHab','taxProp','cfe','taxOther']],['g_transport',['car','transit','carIns','fuel','carMaint']],['g_food',['groceries','market']],['g_kids',['canteen','school','supplies','parcel','childcare','bankFees','kidsOther']],['g_health',['doctor','barber','pharmacy','mutual']],['g_justice',['lawyer','alimony','judgment','justOther']]],
@@ -18,7 +18,7 @@ function postOk(mode,cat,p){return p&&postList(mode,cat).indexOf(p)>=0?p:'';}
 var CURS=['EUR','USD'];
 var ATYPES=['bank','card','savings','invest','cash','momo','loan'];
 var AEMO={bank:'🏦',card:'💳',savings:'🐷',invest:'📈',cash:'💵',momo:'📱',loan:'🏠'};
-var ACOL={bank:'#3F7D6B',savings:'#C9972B',invest:'#7C6BB5',cash:'#5B7DB1',momo:'#D2693E',card:'#8A7F6F',loan:'#B33A2B'};
+var ACOL={bank:'#2F6FB0',savings:'#E8B23A',invest:'#7C6BB5',cash:'#4FA3C7',momo:'#F28C28',card:'#8A7F6F',loan:'#B33A2B'};
 var LIQ=['bank','cash','momo','card'];
 var MAIN=['home','goals','tx','cal','stats','send'];
 var NAVEMO={home:'🏠',goals:'🎯',tx:'💸',cal:'📅',stats:'📊',send:'🌍'};
@@ -461,7 +461,7 @@ function splitData(c,k){k=k||VM;
 function splitCard(c){
   var d=splitData(c),h='<div class="card"><h3>'+esc(t('splitTitle'))+'</h3>';
   if(d.used<=0&&d.base<=0)return h+'<p class="muted">'+esc(t('noSpend'))+'</p></div>';
-  var parts=[['splitNeeds',d.b.needs,'#3F7D6B'],['splitWants',d.b.wants,'#D2693E'],['splitFam',d.b.fam,'#C9972B'],['splitSave',d.b.sav,'#4C9AA8'],['splitInv',d.b.inv,'#8E5BA8']];
+  var parts=[['splitNeeds',d.b.needs,'#2F6FB0'],['splitWants',d.b.wants,'#F28C28'],['splitFam',d.b.fam,'#E8B23A'],['splitSave',d.b.sav,'#1F9E7A'],['splitInv',d.b.inv,'#8E5BA8']];
   var left=Math.max(0,d.left),denom=Math.max(d.base,d.used,0.01);
   var all=parts.concat([['splitLeft',left,'var(--line)']]);
   h+='<div class="stack">'+all.map(function(p){return '<i style="width:'+(p[1]/denom*100).toFixed(1)+'%;background:'+p[2]+'"></i>';}).join('')+'</div>';
@@ -470,7 +470,7 @@ function splitCard(c){
   else h+='<p class="neg" style="margin-top:12px"><strong>'+esc(t('splitOver'))+' '+esc(M(-d.left))+'</strong></p>';
   return h+'<p class="small muted" style="margin-top:8px">'+esc(t('splitRef'))+'</p></div>';
 }
-var RC={n:'#3F7D6B',w:'#D2693E',s:'#4C9AA8'};
+var RC={n:'#2F6FB0',w:'#F28C28',s:'#1F9E7A'};
 function r3(k){var c=calcM(k),d=splitData(c,k);return {k:k,c:c,inc:d.base,n:d.b.needs+d.b.fam,w:d.b.wants,s:d.b.sav+d.b.inv,used:d.used,left:d.left};}
 function r3sum(keys){var a={inc:0,n:0,w:0,s:0,used:0,left:0,by:{},parts:[]};CATS.forEach(function(q){a.by[q]=0;});keys.forEach(function(k){var x=r3(k);a.parts.push(x);['inc','n','w','s','used','left'].forEach(function(f){a[f]+=x[f];});CATS.forEach(function(q){a.by[q]+=x.c.by[q];});});return a;}
 function monthsEnding(k,n){var p=k.split('-'),o=[];for(var i=n-1;i>=0;i--)o.push(ym(new Date(+p[0],+p[1]-1-i,1)));return o;}
@@ -520,7 +520,7 @@ function bilanView(){
   if(a.inc<=0&&a.used<=0)h+='<p class="muted">'+esc(t('noSpend'))+'</p>';
   else{
     h+=(left>=0?'<p class="muted" style="margin:0">'+esc(t('splitLeftIs'))+'</p><div class="big pos">'+esc(M(left))+'</div>':'<p class="neg" style="margin:0">'+esc(t('splitOver'))+'</p><div class="big neg">'+esc(M(-left))+'</div>')+
-      '<div class="stack" style="margin:8px 0"><i style="width:'+pc.toFixed(1)+'%;background:'+(left>=0?'var(--gold,#C9972B)':'#B5412F')+'"></i></div>'+
+      '<div class="stack" style="margin:8px 0"><i style="width:'+pc.toFixed(1)+'%;background:'+(left>=0?'var(--gold,#E8B23A)':'#B5412F')+'"></i></div>'+
       '<div style="display:flex;justify-content:space-between"><span>'+esc(t('income'))+'</span><strong class="pos">'+esc(M(a.inc))+'</strong></div>'+
       '<div style="display:flex;justify-content:space-between;margin-top:6px"><span>'+esc(t('expenses'))+'</span><strong>'+esc(M(a.used))+(base>0?' <span class="muted small">'+Math.round(a.used/base*100)+' %</span>':'')+'</strong></div>';
     if(left>0)h+='<p class="small muted" style="margin-top:10px">'+esc(t('splitHint'))+'</p>';

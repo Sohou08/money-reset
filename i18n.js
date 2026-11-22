@@ -416,3 +416,19 @@ backNow:'Revenir au mois en cours'
 Object.assign(window.I18N.en,{
 backNow:'Back to the current month'
 });
+Object.assign(window.I18N.fr,{
+planLine:'Prévu d’ici la fin du mois (récurrents pas encore passés)',
+planBal:'solde prévu',
+periodF:'Mois et année',
+monthOnly:'Je ne connais que le mois',
+periodHelp:'Chaque opération est rattachée à un mois et une année. Le jour est facultatif : touchez « Je ne connais que le mois » si vous ne le connaissez pas.',
+dateF:'Date (mois, année et jour)'
+});
+Object.assign(window.I18N.en,{
+planLine:'Planned until month end (recurring, not recorded yet)',
+planBal:'planned balance',
+periodF:'Month and year',
+monthOnly:'I only know the month',
+periodHelp:'Every transaction belongs to a month and a year. The day is optional: tap “I only know the month” if you do not know it.',
+dateF:'Date (month, year and day)'
+});

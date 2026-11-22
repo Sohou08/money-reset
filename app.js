@@ -471,7 +471,7 @@ V.goals=function(){
   return h;
 };
 V.tx=function(){
-  var c=calcM(VM),f=UI.tf,pm=pageMasc('scan','mascTx');
+  var c=calcM(VM),f=UI.tf,pm='';
   var fc=UI.tc||'all';
   var list=c.tx.filter(function(x){return (f==='all'||x.type===f)&&(fc==='all'||(x.type==='exp'&&x.cat===fc));});
   var h=monthNav()+pm+'<div class="grid2"><div class="tile"><p class="eyebrow">'+esc(t('income'))+'</p><p class="val pos">'+esc(M(c.incAct))+'</p></div><div class="tile"><p class="eyebrow">'+esc(t('expenses'))+'</p><p class="val">'+esc(M(c.spentAll))+'</p></div></div>';
@@ -529,7 +529,7 @@ ACT.remDays=function(v){S.remind={days:+v||2};save();render();};
 function yearNav(y){return '<div class="monthnav"><button type="button" class="icon" data-a="yprev" aria-label="-1">‹</button><strong>'+y+'</strong><button type="button" class="icon" data-a="ynext" aria-label="+1">›</button></div>';}
 V.cal=function(){
   var mt=UI.cm||'exp',sc=UI.cs||'m',MT=['exp','inc'].concat(CATS);
-  var h=pageMasc('scan','mascCal')+'<div class="chips sm" style="margin:2px 0 6px">'+chip('cs','m',sc==='m',esc(t('cmMonth')))+chip('cs','y',sc==='y',esc(t('cmYear')))+'</div>'+
+  var h=pageMasc('wave','mascCal')+'<div class="chips sm" style="margin:2px 0 6px">'+chip('cs','m',sc==='m',esc(t('cmMonth')))+chip('cs','y',sc==='y',esc(t('cmYear')))+'</div>'+
     '<label class="f" for="cm-sel" style="margin-top:0">'+esc(t('cmShow'))+'</label><select class="in" id="cm-sel" data-ui="cm">'+MT.map(function(k){return '<option value="'+k+'"'+(mt===k?' selected':'')+'>'+esc(mlab(k))+'</option>';}).join('')+'</select>';
   if(sc==='y'){
     var y=+VM.slice(0,4),vals=[],tot=0,mx=0;
@@ -757,7 +757,7 @@ function sumSend(){
 }
 V.send=function(){
   var c=calcM(VM),m=c.m;
-  return monthNav()+pageMasc(c.m.sendMax>0&&c.sent>c.m.sendMax?'worry':'wave',c.m.sendMax>0&&c.sent>c.m.sendMax?'mascSendWarn':'mascSend')+'<div id="sum">'+sumSend()+'</div>'+
+  return monthNav()+(c.m.sendMax>0&&c.sent>c.m.sendMax?pageMasc('worry','mascSendWarn'):'<p class="muted">'+esc(t('sendIntro'))+'</p>')+'<div id="sum">'+sumSend()+'</div>'+
     '<div class="card"><h3>'+esc(t('fcfaConv'))+'</h3><label class="f" for="est-in">'+esc(t('amount'))+' ('+curSym(S.disp)+')</label><input class="in" id="est-in" inputmode="decimal" placeholder="0"><p class="big" id="est-out" style="font-size:1.5rem;margin:10px 0 0">≈ '+esc(fcfa(0))+'</p><p class="small muted" style="margin:6px 0 0">'+esc(t('fcfaNote'))+'</p>'+
     '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+
     '<div class="card"><h3>'+esc(t('obligL'))+'</h3><p class="muted small">'+esc(t('obligH'))+'</p>'+listEd('oblig')+moneyField('f-var','varPlan',S.varPlan,t('varPlan'))+'<p class="small muted">'+esc(t('fieldsNote'))+'</p></div>';

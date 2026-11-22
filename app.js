@@ -431,9 +431,8 @@ V.home=function(){
   var h=topCard()+remindBox();
   h+='<section class="card"><p class="eyebrow">'+esc(t('netWorth'))+'</p><div class="big">'+M2(nw)+'</div><p class="delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'−')+esc(M(Math.abs(delta)))+' <span class="muted">· '+esc(t('per_'+UI.per))+'</span></p>'+spark(ser)+
     '<div class="chips sm">'+['1m','3m','6m','1y','all'].map(function(p){return chip('per',p,UI.per===p,esc(t('pc_'+p)));}).join('')+'</div></section>';
-  var upto=VM<ym(new Date())?VM+'-'+('0'+dim(VM)).slice(-2):null,mname=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+VM.slice(0,4),+VM.slice(5,7)-1,1)),mleft=splitData(calcM(VM),VM).left;
+  var upto=VM<ym(new Date())?VM+'-'+('0'+dim(VM)).slice(-2):null,mname=new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+VM.slice(0,4),+VM.slice(5,7)-1,1));
   h+='<h3 class="sec">'+esc(t('accounts'))+' · '+esc(mname)+'<button type="button" class="link" data-a="addAcc">+ '+esc(t('addAcc'))+'</button></h3>';
-  h+='<p class="small" style="margin:0 0 8px"><span class="muted">'+esc(t('leftIn'))+' '+esc(mname)+' :</span> <strong class="'+(mleft<0?'neg':'')+'">'+esc(M(mleft))+'</strong></p>';
   if(!S.accounts.length)h+='<div class="card flat"><p class="muted">'+esc(t('noAcc2'))+'</p></div>';
   else{
     h+='<div class="card">'+S.accounts.map(function(a){var b=accBal(a,upto),nd=upto&&a.since>upto;return '<button type="button" class="row" data-a="accOpen" data-v="'+a.id+'"><span class="ico">'+AEMO[a.type]+'</span><span class="mid"><span class="t">'+esc(a.name)+'</span><span class="muted small">'+esc(t('at_'+a.type))+'</span></span><span class="amt '+(b<0?'neg':'')+'">'+(nd?'—':esc(fmt(b,a.cur)))+(a.cur!==S.disp?'<span class="s">'+esc(M(toEur(b,a.cur)))+'</span>':'')+'</span></button>';}).join('')+'</div>';
@@ -443,6 +442,7 @@ V.home=function(){
   }
   var c=calcM(VM),over=c.left<0,base=c.income-c.fixed-c.m.saving;
   var curM=VM===ym(new Date()),vp=VM.split('-');
+  var hs=h;h='';
   h+='<h3 class="sec">'+esc(curM?t('thisMonth'):new Intl.DateTimeFormat(loc(),{month:'long',year:'numeric'}).format(new Date(+vp[0],+vp[1]-1,1)))+'<button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></h3>'+monthNav()+(curM?'':'<p style="margin:-2px 0 10px"><button type="button" class="link" data-a="goNow">↩ '+esc(t('backNow'))+'</button></p>');
   var dd=splitData(c,VM),rl=dd.left,pl=planData(VM);over=rl<0;
   var emptyM=!c.tx.length;
@@ -450,7 +450,7 @@ V.home=function(){
   if(emptyM)h+='<p class="small muted" style="margin:8px 0 0">'+esc(t('noOpsHelp'))+'</p>';
   if(pl.inc>0||pl.exp>0)h+='<p class="small muted" style="margin:8px 0 0">'+esc(t('planLine'))+' : '+(pl.inc>0?'+'+esc(M(pl.inc))+' ':'')+(pl.exp>0?'−'+esc(M(pl.exp))+' ':'')+'→ '+esc(t('planBal'))+' <strong>'+esc(M(rl+pl.inc-pl.exp))+'</strong></p>';
   if(VM===ym(new Date())&&rl>0){var dl=dim(VM)-new Date().getDate()+1;if(dl>0)h+='<p class="eyebrow" style="margin-top:6px">≈ '+esc(M(rl/dl))+' '+esc(t('perDay'))+'</p>';}
-  h+='</section>'+objCard(VM);
+  h+='</section>';h=hs+'<div class="mblock">'+h+'</div>';h+=objCard(VM);
   var envs=SPEND.filter(function(k){return S.env[k]>0;});
   if(envs.length)h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">'+esc(t('envelopes'))+'</h3><button type="button" class="link" data-a="editEnv">'+esc(t('edit'))+'</button></div><p class="small muted" style="margin:4px 0 0">'+esc(t('envHelp'))+'</p>'+envs.map(function(k){var sp=c.by[k],lim=S.env[k],rest=lim-sp;return '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span>'+CEMO[k]+' '+esc(t('c_'+k))+'</span><span style="font-weight:700">'+esc(M(lim))+'</span></div>'+bar(lim>0?sp/lim*100:0,sp>lim)+'<p class="small" style="margin:4px 0 0;display:flex;justify-content:space-between"><span class="muted">'+esc(t('envSpent'))+' '+esc(M(sp))+'</span><span class="'+(rest<0?'neg':'pos')+'">'+(rest<0?esc(t('envOver'))+' '+esc(M(-rest)):esc(t('envLeft'))+' '+esc(M(rest)))+'</span></p></div>';}).join('')+'</div>';
   var up=upcoming();

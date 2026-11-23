@@ -1076,14 +1076,19 @@ V.gateCard=function(){
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
 V.gate=function(){
-  var hero='<header class="lp-hero"><div class="lp-top"><span class="gate-logo">MONEY RESET</span><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div></div>'+
-    '<div class="lp-headrow">'+MASC(150,'wave')+'<div><div class="lp-tag">'+esc(t('lpTag'))+'</div><h1 class="lp-h">'+esc(t('lpH'))+'</h1></div></div><p class="lp-sub">'+esc(t('lpSub'))+'</p>'+
-    '<div class="lp-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button></div>'+
-    '<p class="small lp-have"><button type="button" class="link" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></p>'+
-    '<div class="lp-pills">'+['lpP0','lpP1'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div></header>';
-  var feat='<section class="lp-feat"><div class="lp-grid">'+[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']].map(function(f){return '<div class="lp-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
-  var priv='<section class="lp-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p></div></section>';
-  return '<div class="gate">'+hero+'<div class="gate-main" id="g-card">'+V.gateCard()+'</div>'+feat+priv+((AUTH.mode==='in'||AUTH.mode==='up')?'<div class="lp-fb">'+fbCard()+'</div>':'')+'</div>';
+  var nav='<header class="ld-nav"><span class="ld-logo">MONEY RESET</span><div class="ld-navr"><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div><button type="button" class="btn ghost ld-navbtn" data-a="lpAuth" data-v="in">'+esc(t('signin'))+'</button></div></header>';
+  var hero='<section class="ld-hero"><div class="ld-copy"><p class="ld-eyebrow">'+esc(t('lpTag'))+'</p><h1>'+esc(t('lpH'))+'</h1><p class="ld-sub">'+esc(t('lpSub'))+'</p>'+
+    '<div class="ld-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button><button type="button" class="link ld-have" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></div>'+
+    '<ul class="ld-trust"><li>'+esc(t('ldTrust1'))+'</li><li>'+esc(t('ldTrust2'))+'</li><li>'+esc(t('lpP1'))+'</li></ul></div>'+
+    '<div class="ld-visual" aria-hidden="true"><div class="ld-circle"></div>'+MASC(400,'wave')+
+    '<div class="ld-ex ld-ex1">'+esc(t('ldEx1'))+'<b>'+esc(M(412))+'</b><small>'+esc(t('ldExTag'))+'</small></div>'+
+    '<div class="ld-ex ld-ex2">'+esc(t('ldEx2'))+'<b>'+esc(M(150))+'</b><i><u></u></i><small>'+esc(t('ldExTag'))+'</small></div></div></section>';
+  var feat='<section class="ld-sec"><h2>'+esc(t('lpFeatT'))+'</h2><div class="ld-grid">'+[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']].map(function(f){return '<div class="ld-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
+  var auth='<section class="ld-auth" id="g-card"><h2 style="text-align:center;font-family:var(--display);font-size:clamp(26px,5vw,34px);margin:0 0 20px;color:var(--pri)">'+esc(t('ldAuthT'))+'</h2>'+V.gateCard()+'</section>';
+  var priv='<section class="ld-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p></div></section>';
+  var fb=(AUTH.mode==='in'||AUTH.mode==='up')?'<div class="ld-fb">'+fbCard()+'</div>':'';
+  var foot='<footer class="ld-foot">© 2026 Money Reset · <button type="button" data-a="privacy">'+esc(t('privOpen'))+'</button> · <button type="button" data-a="legal">'+esc(t('legalOpen'))+'</button></footer>';
+  return '<div class="ld">'+nav+hero+feat+auth+priv+fb+foot+'</div>';
 };
 
 /* ---------- shell ---------- */

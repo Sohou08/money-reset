@@ -1071,7 +1071,7 @@ V.gateCard=function(){
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+
-    (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="authMode" data-v="forgot" style="padding:0">'+esc(t('forgot'))+'</button> · <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
+    (up?'<label class="small" style="display:flex;gap:10px;align-items:flex-start;margin:10px 0 0"><input type="checkbox" data-a="consent" '+(AUTH.consent?'checked ':'')+'style="margin-top:3px;width:20px;height:20px"> <span>'+esc(t('consentTxt'))+' <button type="button" class="link" data-a="privacy" style="padding:0">'+esc(t('privOpen'))+'</button></span></label>':'<p class="small" style="margin:10px 0 0"><button type="button" class="link" data-a="authMode" data-v="forgot" style="padding:0">'+esc(t('forgot'))+'</button></p>')+'<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="authGo"'+(AUTH.busy?' disabled':'')+'>'+esc(up?t('signup'):t('signin'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
@@ -1084,9 +1084,11 @@ V.gate=function(){
     '<div class="ld-ex ld-ex1">'+esc(t('ldEx1'))+'<b>'+esc(M(412))+'</b><small>'+esc(t('ldExTag'))+'</small></div>'+
     '<div class="ld-ex ld-ex2">'+esc(t('ldEx2'))+'<b>'+esc(M(150))+'</b><i><u></u></i><small>'+esc(t('ldExTag'))+'</small></div></div></section>';
   var feat='<section class="ld-sec"><h2>'+esc(t('lpFeatT'))+'</h2><div class="ld-grid">'+[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']].map(function(f){return '<div class="ld-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
-  var auth='<section class="ld-auth" id="g-card"><h2 style="text-align:center;font-family:var(--display);font-size:clamp(26px,5vw,34px);margin:0 0 20px;color:var(--pri)">'+esc(t('ldAuthT'))+'</h2>'+V.gateCard()+'</section>';
-  var priv='<section class="ld-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p></div></section>';
-  var fb=(AUTH.mode==='in'||AUTH.mode==='up')?'<div class="ld-fb">'+fbCard()+'</div>':'';
+  var up=AUTH.mode==='up';
+  var auth='<section class="ld-auth" id="g-card"><div class="ld-panel"><div class="ld-pl"><h2>'+esc(t(up?'ldAuthT':'ldAuthIn'))+'</h2><p class="ld-psub">'+esc(t('ldAuthSub'))+'</p><ul class="ld-trust"><li>'+esc(t('ldTrust1'))+'</li><li>'+esc(t('ldTrust2'))+'</li><li>'+esc(t('lpP1'))+'</li></ul></div><div class="ld-pr">'+V.gateCard()+'</div></div></section>';
+  var pi=['📱','🧹','🗑️','ℹ️'];
+  var priv='<section class="ld-sec ld-privs"><h2>'+esc(t('lpPrivT'))+'</h2><div class="ld-grid ld-grid4">'+String(t('lpPrivD')).split(/(?<=\.)\s+/).filter(Boolean).slice(0,4).map(function(x,i){return '<div class="ld-fc"><span class="gi" aria-hidden="true">'+pi[i]+'</span><p style="margin-top:12px;color:var(--ink)">'+esc(x)+'</p></div>';}).join('')+'</div></section>';
+  var fb=(AUTH.mode==='in'||AUTH.mode==='up')?'<section class="ld-fb">'+fbCard()+'</section>':'';
   var foot='<footer class="ld-foot">© 2026 Money Reset · <button type="button" data-a="privacy">'+esc(t('privOpen'))+'</button> · <button type="button" data-a="legal">'+esc(t('legalOpen'))+'</button></footer>';
   return '<div class="ld">'+nav+hero+feat+auth+priv+fb+foot+'</div>';
 };

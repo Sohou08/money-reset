@@ -1077,10 +1077,10 @@ V.gateCard=function(){
 };
 V.gate=function(){
   var hero='<header class="lp-hero"><div class="lp-top"><span class="gate-logo">MONEY RESET</span><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div></div>'+
-    '<div class="lp-tag">'+esc(t('lpTag'))+'</div><h1 class="lp-h">'+esc(t('lpH'))+'</h1><p class="lp-sub">'+esc(t('lpSub'))+'</p>'+
+    '<div class="lp-headrow">'+MASC(150,'wave')+'<div><div class="lp-tag">'+esc(t('lpTag'))+'</div><h1 class="lp-h">'+esc(t('lpH'))+'</h1></div></div><p class="lp-sub">'+esc(t('lpSub'))+'</p>'+
     '<div class="lp-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button></div>'+
     '<p class="small lp-have"><button type="button" class="link" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></p>'+
-    '<div class="lp-pills">'+['lpP0','lpP1'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div><div class="lp-masc">'+MASC(150,'wave')+'</div></header>';
+    '<div class="lp-pills">'+['lpP0','lpP1'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div></header>';
   var feat='<section class="lp-feat"><div class="lp-grid">'+[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']].map(function(f){return '<div class="lp-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
   var priv='<section class="lp-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p></div></section>';
   return '<div class="gate">'+hero+'<div class="gate-main" id="g-card">'+V.gateCard()+'</div>'+feat+priv+((AUTH.mode==='in'||AUTH.mode==='up')?'<div class="lp-fb">'+fbCard()+'</div>':'')+'</div>';

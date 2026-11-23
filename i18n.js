@@ -747,7 +747,7 @@ cohTagNear:'already entered on',
 impPrivacy:'The file is read on your device: it is never sent to our servers. IBANs, card numbers, emails and phone numbers are removed from labels, and people’s names are abbreviated. Only the transactions you confirm are saved.'
 });
 Object.assign(window.I18N.fr,{
-lpTag:'Pensée pour la diaspora africaine',
+lpTag:'Pensée pour la diaspora africaine, utile à tous',
 lpH:'Chaque euro compte. Même ceux que vous envoyez au pays.',
 lpSub:'Money Reset vous aide à savoir où part votre argent, à soutenir votre famille sans vous mettre en difficulté, et à financer vos projets : voyage, terrain, construction, épargne.',
 lpCta1:'Créer mon compte',
@@ -782,7 +782,7 @@ lpPrivD:'Vos relevés sont lus sur votre appareil et jamais envoyés. Les IBAN, 
 lpDisc:'Money Reset est un outil d’information et d’organisation, pas un conseiller financier.'
 });
 Object.assign(window.I18N.en,{
-lpTag:'Built for the African diaspora',
+lpTag:'Built for the African diaspora, useful to everyone',
 lpH:'Every euro counts. Even the ones you send home.',
 lpSub:'Money Reset helps you see where your money goes, support your family without putting yourself under strain, and fund your projects: travel, land, building, savings.',
 lpCta1:'Create my account',

@@ -1076,16 +1076,14 @@ V.gateCard=function(){
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
 V.gate=function(){
-  var F6=[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']];
   var hero='<header class="lp-hero"><div class="lp-top"><span class="gate-logo">MONEY RESET</span><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div></div>'+
     '<div class="lp-tag">'+esc(t('lpTag'))+'</div><h1 class="lp-h">'+esc(t('lpH'))+'</h1><p class="lp-sub">'+esc(t('lpSub'))+'</p>'+
-    '<div class="lp-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button><button type="button" class="btn ghost" data-a="guest">'+esc(t('lpCta2'))+'</button></div>'+
+    '<div class="lp-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button></div>'+
     '<p class="small lp-have"><button type="button" class="link" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></p>'+
-    '<div class="lp-pills">'+['lpP0','lpP1','lpP2','lpP3'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div><div class="lp-masc">'+MASC(150,'wave')+'</div></header>';
-  var feat='<section class="lp-feat"><h2>'+esc(t('lpFeatT'))+'</h2><div class="lp-grid">'+F6.map(function(f){return '<div class="lp-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
-  var how='<section class="lp-how"><h2>'+esc(t('lpHowT'))+'</h2><ol>'+[1,2,3].map(function(n){return '<li><span class="n">'+n+'</span><div><strong>'+esc(t('lpS'+n+'T'))+'</strong><p>'+esc(t('lpS'+n+'D'))+'</p></div></li>';}).join('')+'</ol><p class="small muted" style="margin:14px 0 0">📱💻 '+esc(t('lpDev'))+'</p></section>';
-  var priv='<section class="lp-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p><p class="small muted" style="margin:8px 0 0">'+esc(t('lpDisc'))+'</p></div></section>';
-  return '<div class="gate">'+hero+'<div class="gate-main" id="g-card">'+V.gateCard()+((AUTH.mode==='in'||AUTH.mode==='up')?fbCard():'')+'</div>'+feat+how+priv+'</div>';
+    '<div class="lp-pills">'+['lpP0','lpP1'].map(function(k){return '<span>'+esc(t(k))+'</span>';}).join('')+'</div><div class="lp-masc">'+MASC(150,'wave')+'</div></header>';
+  var feat='<section class="lp-feat"><div class="lp-grid">'+[['🎯','1'],['🌍','2'],['🏡','3'],['📄','4'],['📊','5'],['📚','6']].map(function(f){return '<div class="lp-fc"><span class="gi" aria-hidden="true">'+f[0]+'</span><h3>'+esc(t('lpF'+f[1]+'T'))+'</h3><p>'+esc(t('lpF'+f[1]+'D'))+'</p></div>';}).join('')+'</div></section>';
+  var priv='<section class="lp-priv"><span class="gi" aria-hidden="true">🔒</span><div><h2>'+esc(t('lpPrivT'))+'</h2><p>'+esc(t('lpPrivD'))+'</p></div></section>';
+  return '<div class="gate">'+hero+'<div class="gate-main" id="g-card">'+V.gateCard()+'</div>'+feat+priv+((AUTH.mode==='in'||AUTH.mode==='up')?'<div class="lp-fb">'+fbCard()+'</div>':'')+'</div>';
 };
 
 /* ---------- shell ---------- */

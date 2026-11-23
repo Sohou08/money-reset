@@ -313,3 +313,17 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .plans .best{border:2px solid var(--gold2)}
 .plans .badge{position:absolute;top:-11px;right:14px;background:var(--orange);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
 @media (min-width:640px){.plans{grid-template-columns:1fr 1fr}}
+
+/* accueil allégé : ordre mobile = présentation, formulaire, données, avis */
+.lp-feat{order:2}.gate-main{order:3}.lp-priv{order:4}.lp-fb{order:5}
+.lp-hero{order:1}
+.lp-grid .lp-fc p{font-size:14px}
+.lp-priv{align-items:center}
+.lp-priv h2{font-size:20px;margin:0 0 4px}
+@media (min-width:900px){
+  .gate-main,.lp-feat,.lp-priv,.lp-fb,.lp-hero{order:0}
+  .gate-main{grid-column:2;grid-row:1}
+  .lp-feat{grid-column:1 / -1;grid-row:2}
+  .lp-priv{grid-column:1 / -1;grid-row:3}
+  .lp-fb{grid-column:1 / -1;grid-row:4;max-width:560px;width:100%;margin:0 auto}
+}

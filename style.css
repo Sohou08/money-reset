@@ -321,7 +321,7 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 .ld-foot button{font:inherit;color:var(--muted);background:none;border:0;padding:0 4px;text-decoration:underline;cursor:pointer}
 @media (min-width:640px){
   .ld-grid{grid-template-columns:1fr 1fr}
-  .ld-navbtn{display:inline-flex}.ld-have{display:none}
+  .ld-navbtn{display:inline-flex;align-items:center;justify-content:center;line-height:1}.ld-have{display:none}
   .ld-visual{height:340px}.ld-visual .masc{height:320px}
 }
 @media (min-width:900px){

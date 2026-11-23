@@ -275,7 +275,7 @@ img.masc{width:auto;object-fit:contain;background:#fff;border-radius:20px}
 #view[data-tab=gate]{max-width:1120px;padding-left:20px;padding-right:20px}
 .ld{display:block;padding-bottom:40px}
 .ld-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0}
-.ld-logo{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.14em;color:var(--pri)}
+.ld-logo{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--pri)}
 .ld-navr{display:flex;align-items:center;gap:10px}
 .ld-navr .gate-lang{margin:0}
 .ld-navbtn{display:none;min-height:40px;padding:0 18px;font-size:14px}

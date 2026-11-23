@@ -462,7 +462,7 @@ function evtDue(){
 function evtWhen(off){return off===0?t('today'):(off===1?t('tomorrow'):t('inNDays').replace('{n}',off));}
 function notifyDue(){
   if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
-  evtDue().forEach(function(o){var k=o.e.id+'|'+o.date+'|'+o.off;if(S.notified[k])return;S.notified[k]=1;try{new Notification('MONEY RESET · '+evtWhen(o.off),{body:o.e.name+(o.e.amt>0?' · '+fmt(o.e.amt,o.e.cur||'EUR'):'')});}catch(x){}});
+  evtDue().forEach(function(o){var k=o.e.id+'|'+o.date+'|'+o.off;if(S.notified[k])return;S.notified[k]=1;try{new Notification('MoneyReset · '+evtWhen(o.off),{body:o.e.name+(o.e.amt>0?' · '+fmt(o.e.amt,o.e.cur||'EUR'):'')});}catch(x){}});
   var ks=Object.keys(S.notified);if(ks.length>200){ks.slice(0,ks.length-200).forEach(function(k){delete S.notified[k];});}
   save();
 }
@@ -1058,16 +1058,16 @@ V.settings=function(){
 
 V.gateCard=function(){
   var up=AUTH.mode==='up';
-  if(AUTH.mode==='forgot')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('forgotSub'))+'</p>'+
+  if(AUTH.mode==='forgot')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MoneyReset</h1><p class="muted" style="margin:0 0 14px">'+esc(t('forgotSub'))+'</p>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email" value="'+esc(AUTH.email||'')+'">'+
     '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="forgotGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('forgotSend'))+'</button>'+
     '<button type="button" class="btn ghost full" data-a="authMode" data-v="in">'+esc(t('back'))+'</button></section>';
-  if(AUTH.mode==='reset')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MONEY RESET</h1><p class="muted" style="margin:0 0 14px">'+esc(t('newPassSub'))+'</p>'+
+  if(AUTH.mode==='reset')return '<section class="card gate-card"><h1 style="font-family:var(--display);margin:0 0 4px">MoneyReset</h1><p class="muted" style="margin:0 0 14px">'+esc(t('newPassSub'))+'</p>'+
     '<label class="f" for="g-pass">'+esc(t('newPass'))+'</label><input class="in" id="g-pass" type="password" autocomplete="new-password">'+
     '<p class="small" id="g-msg" role="alert" style="min-height:1.2em;margin:8px 0">'+esc(AUTH.msg)+'</p>'+
     '<button type="button" class="btn full" data-a="resetGo"'+(AUTH.busy?' disabled':'')+'>'+esc(t('newPassGo'))+'</button></section>';
-  return '<section class="card gate-card"><div class="masc-row">'+MASC(64)+'<h1 style="font-family:var(--display);margin:0">MONEY RESET</h1></div><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
+  return '<section class="card gate-card"><div class="masc-row">'+MASC(64)+'<h1 style="font-family:var(--display);margin:0">MoneyReset</h1></div><p class="muted" style="margin:0 0 14px">'+esc(t('authSub'))+'</p>'+
     '<div class="chips" style="margin-bottom:6px">'+chip('authMode','in',!up,esc(t('signin')))+chip('authMode','up',up,esc(t('signup')))+'</div>'+
     '<label class="f" for="g-email">'+esc(t('email'))+'</label><input class="in" id="g-email" type="email" autocomplete="email" inputmode="email">'+
     '<label class="f" for="g-pass">'+esc(t('password'))+'</label><input class="in" id="g-pass" type="password" autocomplete="'+(up?'new-password':'current-password')+'">'+
@@ -1076,7 +1076,7 @@ V.gateCard=function(){
     '<button type="button" class="btn ghost full" data-a="guest">'+esc(t('guest'))+'</button><p class="small muted">'+esc(t('guestNote'))+'</p></section>';
 };
 V.gate=function(){
-  var nav='<header class="ld-nav"><span class="ld-logo">MONEY RESET</span><div class="ld-navr"><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div><button type="button" class="btn ghost ld-navbtn" data-a="lpAuth" data-v="in">'+esc(t('signin'))+'</button></div></header>';
+  var nav='<header class="ld-nav"><span class="ld-logo">MoneyReset</span><div class="ld-navr"><div class="gate-lang" role="group" aria-label="Langue / Language">'+['fr','en'].map(function(l){return chip('lang',l,S.lang===l,l==='fr'?'Français':'English');}).join('')+'</div><button type="button" class="btn ghost ld-navbtn" data-a="lpAuth" data-v="in">'+esc(t('signin'))+'</button></div></header>';
   var hero='<section class="ld-hero"><div class="ld-copy"><p class="ld-eyebrow">'+esc(t('lpTag'))+'</p><h1>'+esc(t('lpH'))+'</h1><p class="ld-sub">'+esc(t('lpSub'))+'</p>'+
     '<div class="ld-cta"><button type="button" class="btn" data-a="lpAuth" data-v="up">'+esc(t('lpCta1'))+'</button><button type="button" class="link ld-have" data-a="lpAuth" data-v="in" style="padding:0">'+esc(t('lpCta3'))+'</button></div>'+
     '<ul class="ld-trust"><li>'+esc(t('ldTrust1'))+'</li><li>'+esc(t('ldTrust2'))+'</li><li>'+esc(t('lpP1'))+'</li></ul></div>'+
@@ -1089,7 +1089,7 @@ V.gate=function(){
   var pi=['📱','🧹','🗑️','ℹ️'];
   var priv='<section class="ld-sec ld-privs"><h2>'+esc(t('lpPrivT'))+'</h2><div class="ld-grid ld-grid4">'+String(t('lpPrivD')).split(/(?<=\.)\s+/).filter(Boolean).slice(0,4).map(function(x,i){return '<div class="ld-fc"><span class="gi" aria-hidden="true">'+pi[i]+'</span><p style="margin-top:12px;color:var(--ink)">'+esc(x)+'</p></div>';}).join('')+'</div></section>';
   var fb=(AUTH.mode==='in'||AUTH.mode==='up')?'<section class="ld-fb">'+fbCard()+'</section>':'';
-  var foot='<footer class="ld-foot">© 2026 Money Reset · <button type="button" data-a="privacy">'+esc(t('privOpen'))+'</button> · <button type="button" data-a="legal">'+esc(t('legalOpen'))+'</button></footer>';
+  var foot='<footer class="ld-foot">© 2026 MoneyReset · <button type="button" data-a="privacy">'+esc(t('privOpen'))+'</button> · <button type="button" data-a="legal">'+esc(t('legalOpen'))+'</button></footer>';
   return '<div class="ld">'+nav+hero+feat+auth+priv+fb+foot+'</div>';
 };
 

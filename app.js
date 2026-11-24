@@ -496,6 +496,7 @@ function trialStart(){
   return v;
 }
 function subInfo(){
+  if(!CFG.billing)return {state:'active',days:0,end:'',endD:new Date(),plan:'',next:''};
   var dev=null;try{dev=localStorage.getItem('moneyreset.devsub');}catch(e){}
   var st=trialStart(),sd=pd(st),end=new Date(sd.getFullYear(),sd.getMonth(),sd.getDate()+TRIAL_DAYS),now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   var days=Math.ceil((end-t0)/864e5),sub=S.sub||{};
@@ -991,7 +992,7 @@ V.send=function(){
     '<table style="margin-top:10px"><tr><td>'+esc(t('sentSoFar'))+'</td><td>'+esc(fcfa(c.sent))+'</td></tr>'+(m.sendMax>0?'<tr><td>'+esc(t('fcfaRange'))+'</td><td>'+esc(fcfa(m.sendMin))+' – '+esc(fcfa(m.sendMax))+'</td></tr>':'')+'</table></div>'+'';
 };
 V.more=function(){
-  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['guide','📚'],['sub','💳'],['settings','⚙️']];
+  var items=[['tx','🧾'],['recurring','🔁'],['trips','✈️'],['guide','📚']].concat(CFG.billing?[['sub','💳']]:[],[['settings','⚙️']]);
   return '<div class="card" style="padding:4px 16px">'+items.map(function(i){return '<button type="button" class="row" data-a="tab" data-v="'+i[0]+'"><span class="ico">'+i[1]+'</span><span class="mid"><span class="t">'+esc(t(i[0]))+'</span><span class="muted small">'+esc(t('d_'+i[0]))+'</span></span><span class="muted">›</span></button>';}).join('')+'</div>';
 };
 V.recurring=function(){

@@ -1473,7 +1473,7 @@ ACT.authGo=function(){
 };
 function privBody(){
   var P=function(k){return '<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pv_'+k+'_t'))+'</h3><p class="small" style="margin:0">'+esc(t('pv_'+k))+'</p>';};
-  return '<p class="small muted" style="margin-top:0">'+esc(t('pvIntro'))+'</p>'+['what','where','who','imp','sec','third','rights','keep'].map(P).join('')+(CFG.contact?'<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pvContactT'))+'</h3><p class="small" style="margin:0">'+esc(CFG.contact)+'</p>':'')+'<p class="small muted" style="margin-top:14px">'+esc(t('pvDate'))+'</p>';
+  return '<p class="small muted" style="margin-top:0">'+esc(t('pvIntro'))+'</p>'+['ctrl','what','basis','where','who','imp','pay','fb','sec','third','age','rights','keep'].map(P).join('')+(CFG.contact?'<h3 style="margin:14px 0 4px;font-size:1rem">'+esc(t('pvContactT'))+'</h3><p class="small" style="margin:0">'+esc(CFG.contact)+'</p>':'')+'<p class="small muted" style="margin-top:14px">'+esc(t('pvDate'))+'</p>';
 }
 ACT.privacy=function(){openSheet(t('privTitle'),privBody);};
 function legalBody(){
